@@ -48,7 +48,7 @@ public class HistogramActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent returnIntent = getIntent();
-                setResult(Activity.RESULT_OK,returnIntent);
+                setResult(Activity.RESULT_OK, returnIntent);
                 finish();
             }
         });
@@ -58,7 +58,7 @@ public class HistogramActivity extends AppCompatActivity {
 
     /**
      * Create the histogram from the bitmap.
-     *
+     * 
      * Use of an external widget : GraphView
      * Link : https://github.com/jjoe64/GraphView
      */

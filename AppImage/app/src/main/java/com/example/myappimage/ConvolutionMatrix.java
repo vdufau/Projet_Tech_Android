@@ -47,6 +47,8 @@ public class ConvolutionMatrix {
     /**
      * Apply the matrix to each pixel of the bitmap.
      *
+     * TODO Essayer de faire avec un tableau d'entier et pas une couleur pour le pixel et faire le traitement de transformation en pixel plus tard (ou un delire dans le style)
+     *
      * @param bitmap the bitmap to transform
      * @return an array which contain the new pixels values
      */

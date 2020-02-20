@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -13,13 +14,20 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.renderscript.Allocation;
 import android.renderscript.RenderScript;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -30,26 +38,38 @@ import android.graphics.Color;
 import com.skydoves.colorpickerview.ColorPickerDialog;
 import com.skydoves.colorpickerview.listeners.ColorListener;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+// TODO fragment a la place d'activité
 /**
  * MainActivity Class
  *
  * @author Dufau Vincent
  * Link : https://github.com/vdufau/Projet_Tech_L3
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Context context = this;
     private static TextView tv;
-    private Button button;
-    private ImageView im;
+    private Button buttonHisto;
+    private Button buttonSave;
+    private static ImageView im;
     private Bitmap bitmap;
-    private int img;
+    private int[] initialPixels;
+    private Matrix matrix = new Matrix();
+    private float scale = 1f;
+    private ScaleGestureDetector SGD;
 
     /**
      * Initialization of the application.
      * Initialization of the main layout.
      * Initialization of the image which will be displayed in the application.
-     * Listener to a button to show the image's histogram.
+     * Initialization of buttons listener.
      *
      * @param savedInstanceState the data to initialize if there is a save thanks to onSaveInstanceState (it will not be the case in this application)
      */
@@ -62,17 +82,19 @@ public class MainActivity extends AppCompatActivity {
 
         tv = (TextView) findViewById(R.id.sizeImage);
         im = (ImageView) findViewById(R.id.imageView);
-        img = R.drawable.lena;
+
         initialization();
 
-        button = (Button) findViewById(R.id.buttonHisto);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, HistogramActivity.class);
-                startActivityForResult(intent, 1);
-            }
-        });
+        buttonHisto = (Button) findViewById(R.id.buttonHisto);
+        buttonHisto.setOnClickListener(this);
+        buttonSave = (Button) findViewById(R.id.saveImage);
+        buttonSave.setOnClickListener(this);
+
+        SGD = new ScaleGestureDetector(this, new ScaleListener());
+    }
+
+    public static ImageView getIm() {
+        return im;
     }
 
     /**
@@ -148,21 +170,49 @@ public class MainActivity extends AppCompatActivity {
 //                sobelFilterConvolutionRS();
                 return true;
             case R.id.reinitialization:
-                initialization();
+                bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.buttonHisto:
+                Intent intent = new Intent(MainActivity.this, HistogramActivity.class);
+                startActivityForResult(intent, 1);
+                break;
+            case R.id.saveImage:
+                if (isExternalStorageWritable()) {
+                    Log.i("info", "oui");
+                    saveImage();
+                } else {
+                    Log.i("info", "non");
+                }
+                break;
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        SGD.onTouchEvent(event);
+        return true;
+    }
+
     /**
      * Initialize the bitmap.
      */
     private void initialization() {
-        bitmap = decodeSampledBitmapFromResource(getResources(), img, 512, 512);
-        tv.setText(tv.getText() + "\nTaille de la bitmap : " + bitmap.getWidth() + " x " + bitmap.getHeight());
+        bitmap = BitmapSingleton.getInstance().getBitmap();
+        initialPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         im.setImageBitmap(bitmap);
-        BitmapSingleton.getInstance().setBitmap(bitmap);
+//        bitmap = decodeSampledBitmapFromResource(getResources(), img, 512, 512);
+//        tv.setText(tv.getText() + "\nTaille de la bitmap : " + bitmap.getWidth() + " x " + bitmap.getHeight());
+//        im.setImageBitmap(bitmap);
+//        BitmapSingleton.getInstance().setBitmap(bitmap);
     }
 
     /**
@@ -212,6 +262,37 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return inSampleSize;
+    }
+
+    // TODO marche pas -> probleme internal / external storage
+    private void saveImage() {
+//        String root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
+//        File myDir = new File(root + "/saved_images");
+//        myDir.mkdirs();
+
+//        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+//        Log.i("info", timeStamp);
+//        String fname = "image_" + timeStamp + ".jpg";
+//        Log.i("info", fname);
+//
+//        File file = new File(root, fname);
+//        if (file.exists()) file.delete();
+//        try {
+//            FileOutputStream out = new FileOutputStream(file);
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+//            out.flush();
+//            out.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -272,7 +353,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Show a color dialog to choose one color which will be useful to an image transformation algorithm.
-     * <p>
      * Use of an external widget : ColorPickerView
      * Link : https://github.com/skydoves/ColorPickerView
      *
@@ -362,35 +442,38 @@ public class MainActivity extends AppCompatActivity {
 
         builder.setPositiveButton(getString(R.string.validate), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
+                if (!input.getText().toString().matches("")) {
                 int value = Integer.parseInt(input.getText().toString());
-                switch (type) {
-                    case CONTRAST_DIMINUTION:
-                        switch (version) {
-                            case JAVA:
-                                contrastDiminution(value);
-                                break;
-                            case RENDERSCRIPT:
-                                contrastDiminutionRS(value);
-                                break;
-                        }
-                        break;
-                    case AVERAGE_CONVOLUTION:
-                        switch (version) {
-                            case JAVA:
-                                if (value % 2 == 1) {
-                                    averageFilterConvolution(value);
-                                } else {
-                                    inputDialog(AlgorithmVersion.JAVA, AlgorithmType.AVERAGE_CONVOLUTION);
-                                }
-                                break;
-                            case RENDERSCRIPT:
-                                if (value % 2 == 1) {
+                    switch (type) {
+                        case CONTRAST_DIMINUTION:
+                            switch (version) {
+                                case JAVA:
+                                    Log.i("aya", String.valueOf(value));
+                                    contrastDiminution(value);
+                                    break;
+                                case RENDERSCRIPT:
+                                    contrastDiminutionRS(value);
+                                    break;
+                            }
+                            break;
+                        case AVERAGE_CONVOLUTION:
+                            switch (version) {
+                                case JAVA:
+                                    if (value % 2 == 1) {
+                                        averageFilterConvolution(value);
+                                    } else {
+                                        inputDialog(AlgorithmVersion.JAVA, AlgorithmType.AVERAGE_CONVOLUTION);
+                                    }
+                                    break;
+                                case RENDERSCRIPT:
+                                    if (value % 2 == 1) {
 //                                    averageFilterConvolutionRS(value);
-                                } else {
-                                    inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
-                                }
-                                break;
-                        }
+                                    } else {
+                                        inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
+                                    }
+                                    break;
+                            }
+                    }
                 }
             }
         });
@@ -438,6 +521,18 @@ public class MainActivity extends AppCompatActivity {
      * @param interval the interval to keep
      */
     private void keepColor(int color, int interval) {
+        int interLeft = color - interval / 2;
+        int interRight = color + interval / 2;
+        if (interLeft < 0) {
+            int tmp = interLeft;
+            interLeft = interRight;
+            interRight = 360 + (tmp % 360);
+        }
+        if (interRight > 360) {
+            int tmp = interRight;
+            interRight = interLeft;
+            interLeft = tmp % 360;
+        }
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         for (int i = 0; i < pixels.length; i++) {
@@ -452,7 +547,7 @@ public class MainActivity extends AppCompatActivity {
              */
             float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
 
-            if (color - interval / 2 > hsv[0] || color + interval / 2 < hsv[0]) {
+            if (interLeft < hsv[0] && interRight > hsv[0]) {
                 int pixelGray = pixelToGray(pixels[i]);
                 pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
             }
@@ -758,6 +853,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Keep an interval of colors using renderscript.
+     * // TODO adapter comme version java
      *
      * @param color    the color to keep
      * @param interval the interval
