@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+
     <Button
         android:id="@+id/buttonHisto"
         android:layout_width="wrap_content"
@@ -43,5 +44,36 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/main"
+        tools:context=".MainActivity" >
+
+        <ImageView
+            android:id="@+id/rightEar"
+            android:layout_width="64dp"
+            android:layout_height="61dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="top"
+            android:layout_marginLeft="160dp"
+            android:layout_marginTop="438dp"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/right_ear" />
+
+        <ImageView
+            android:id="@+id/leftEar"
+            android:layout_width="64dp"
+            android:layout_height="61dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="top"
+            android:layout_marginLeft="96dp"
+            android:layout_marginTop="439dp"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/left_ear" />
+    </RelativeLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

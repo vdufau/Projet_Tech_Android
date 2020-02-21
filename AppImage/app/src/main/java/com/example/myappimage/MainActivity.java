@@ -2,6 +2,9 @@ package com.example.myappimage;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,6 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.media.Image;
 import android.os.Bundle;
 import android.renderscript.Allocation;
 import android.renderscript.RenderScript;
@@ -20,12 +24,16 @@ import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.graphics.Color;
+import android.widget.Toast;
 
 import com.skydoves.colorpickerview.ColorPickerDialog;
 import com.skydoves.colorpickerview.listeners.ColorListener;
@@ -36,7 +44,7 @@ import com.skydoves.colorpickerview.listeners.ColorListener;
  * @author Dufau Vincent
  * Link : https://github.com/vdufau/Projet_Tech_L3
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private Context context = this;
     private static TextView tv;
@@ -44,6 +52,15 @@ public class MainActivity extends AppCompatActivity {
     private ImageView im;
     private Bitmap bitmap;
     private int img;
+
+    //facial objects
+
+    private ViewGroup mainLayout;
+    private ImageView rightEar;
+    private ImageView leftEar;
+
+    private int xDelta;
+    private int yDelta;
 
     /**
      * Initialization of the application.
@@ -57,6 +74,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //FACIAL OBJECTS
+
+        mainLayout = (RelativeLayout) findViewById(R.id.main);
+        rightEar = (ImageView) findViewById(R.id.rightEar);
+        leftEar = (ImageView) findViewById(R.id.leftEar);
+
+        rightEar.setOnTouchListener(onTouchListener());
+        leftEar.setOnTouchListener(onTouchListener());
+
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -74,6 +101,51 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    private View.OnTouchListener onTouchListener() {
+        return new View.OnTouchListener() {
+
+            @SuppressLint("ClickableViewAccessibility")
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+
+                final int x = (int) event.getRawX();
+                final int y = (int) event.getRawY();
+
+                switch (event.getAction() & MotionEvent.ACTION_MASK) {
+
+                    case MotionEvent.ACTION_DOWN:
+                        RelativeLayout.LayoutParams lParams = (RelativeLayout.LayoutParams)
+                                view.getLayoutParams();
+
+                        xDelta = x - lParams.leftMargin;
+                        yDelta = y - lParams.topMargin;
+                        break;
+
+                    case MotionEvent.ACTION_UP:
+                        Toast.makeText(MainActivity.this,
+                                "Ear", Toast.LENGTH_SHORT)
+                                .show();
+                        break;
+
+                    case MotionEvent.ACTION_MOVE:
+                        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view
+                                .getLayoutParams();
+                        layoutParams.leftMargin = x - xDelta;
+                        layoutParams.topMargin = y - yDelta;
+                        layoutParams.rightMargin = 0;
+                        layoutParams.bottomMargin = 0;
+                        view.setLayoutParams(layoutParams);
+                        break;
+                }
+
+                mainLayout.invalidate();
+                return true;
+            }
+        };
+    }
+
+
 
     /**
      * Initialization of the menu.
