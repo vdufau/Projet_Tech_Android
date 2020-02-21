@@ -6,17 +6,22 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -74,10 +79,9 @@ public class LoadActivity extends AppCompatActivity implements View.OnClickListe
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "camera permission granted", Toast.LENGTH_LONG).show();
                 openCamera();
             } else {
-                Toast.makeText(this, "camera permission denied", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Permission caméra refusée", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -86,29 +90,31 @@ public class LoadActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == IMAGE_PICK_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) {
+        if (resultCode == Activity.RESULT_OK) {
+            int activityCode = -1;
+            if (requestCode == IMAGE_PICK_CODE && data != null && data.getData() != null) {
+                image_uri = data.getData();
+                activityCode = 1;
+            }
+            if (requestCode == IMAGE_CAPTURE_CODE) {
+                activityCode = 2;
+            }
             try {
-                Uri uri = data.getData();
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri).copy(Bitmap.Config.ARGB_8888, true);
+                if (activityCode != -1) {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), image_uri).copy(Bitmap.Config.ARGB_8888, true);
 
-                BitmapSingleton.getInstance().setBitmap(bitmap);
-                Intent intent = new Intent(LoadActivity.this, MainActivity.class);
-                startActivityForResult(intent, 1);
+                    BitmapSingleton.getInstance().setBitmap(bitmap);
+                    Intent intent = new Intent(LoadActivity.this, MainActivity.class);
+                    InputStream inputStream = getContentResolver().openInputStream(image_uri);
+                    ExifInterface ei = new ExifInterface(inputStream);
+                    int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                            ExifInterface.ORIENTATION_UNDEFINED);
+                    intent.putExtra("orientation", orientation);
+                    startActivityForResult(intent, activityCode);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        if (requestCode == IMAGE_CAPTURE_CODE && resultCode == Activity.RESULT_OK) {
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), image_uri).copy(Bitmap.Config.ARGB_8888, true);
-
-                BitmapSingleton.getInstance().setBitmap(bitmap);
-                Intent intent = new Intent(LoadActivity.this, MainActivity.class);
-                startActivityForResult(intent, 1);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
     }
 

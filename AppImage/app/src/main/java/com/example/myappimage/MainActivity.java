@@ -15,6 +15,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -205,63 +206,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Initialize the bitmap.
      */
     private void initialization() {
+        Intent intent = getIntent();
+
         bitmap = BitmapSingleton.getInstance().getBitmap();
         initialPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        im.setImageBitmap(bitmap);
-//        bitmap = decodeSampledBitmapFromResource(getResources(), img, 512, 512);
-//        tv.setText(tv.getText() + "\nTaille de la bitmap : " + bitmap.getWidth() + " x " + bitmap.getHeight());
-//        im.setImageBitmap(bitmap);
-//        BitmapSingleton.getInstance().setBitmap(bitmap);
-    }
 
-    /**
-     * Create the bitmap.
-     *
-     * @param res       the resources
-     * @param resId     the id's image
-     * @param reqWidth  the width required
-     * @param reqHeight the height required
-     * @return the bitmap created built on the image
-     */
-    public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId, int reqWidth, int reqHeight) {
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeResource(res, resId, options);
 
-        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+        int orientation = intent.getIntExtra("orientation", 0);
 
-        options.inJustDecodeBounds = false;
-        options.inMutable = true;
-        return BitmapFactory.decodeResource(res, resId, options);
-    }
+        Bitmap rotatedBitmap = null;
+        switch(orientation) {
 
-    /**
-     * Calculate the value to rescale the image.
-     *
-     * @param options   the bitmap's options
-     * @param reqWidth  the width required
-     * @param reqHeight the height required
-     * @return the size
-     */
-    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        tv.setText("Taille de base de l'image : " + width + " x " + height);
-        int inSampleSize = 1;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                rotatedBitmap = rotateImage(bitmap, 90);
+                break;
 
-        if (height > reqHeight || width > reqWidth) {
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                rotatedBitmap = rotateImage(bitmap, 180);
+                break;
 
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                rotatedBitmap = rotateImage(bitmap, 270);
+                break;
 
-            while ((halfHeight / inSampleSize) >= reqHeight
-                    && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
+            case ExifInterface.ORIENTATION_NORMAL:
+            default:
+                rotatedBitmap = bitmap;
         }
 
-        return inSampleSize;
+        bitmap = rotatedBitmap;
+        im.setImageBitmap(bitmap);
+    }
+
+    public static Bitmap rotateImage(Bitmap source, float angle) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(),
+                matrix, true);
     }
 
     // TODO marche pas -> probleme internal / external storage
