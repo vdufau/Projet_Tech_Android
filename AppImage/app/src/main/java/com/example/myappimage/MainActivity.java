@@ -124,7 +124,7 @@ public class MainActivity extends Activity {
 
                     case MotionEvent.ACTION_UP:
                         Toast.makeText(MainActivity.this,
-                                "Ear", Toast.LENGTH_SHORT)
+                                "Dragging object...", Toast.LENGTH_SHORT)
                                 .show();
                         break;
 
