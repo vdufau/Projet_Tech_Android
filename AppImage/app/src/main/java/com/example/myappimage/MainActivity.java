@@ -39,14 +39,8 @@ import android.graphics.Color;
 import com.skydoves.colorpickerview.ColorPickerDialog;
 import com.skydoves.colorpickerview.listeners.ColorListener;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 // TODO fragment a la place d'activité
+
 /**
  * MainActivity Class
  *
@@ -62,9 +56,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static ImageView im;
     private Bitmap bitmap;
     private int[] initialPixels;
-    private Matrix matrix = new Matrix();
-    private float scale = 1f;
     private ScaleGestureDetector SGD;
+    private float mx, my, curX, curY;
 
     /**
      * Initialization of the application.
@@ -186,12 +179,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivityForResult(intent, 1);
                 break;
             case R.id.saveImage:
-                if (isExternalStorageWritable()) {
-                    Log.i("info", "oui");
-                    saveImage();
-                } else {
-                    Log.i("info", "non");
-                }
+                saveImage();
                 break;
         }
     }
@@ -199,6 +187,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         SGD.onTouchEvent(event);
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mx = event.getX();
+                my = event.getY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                curX = event.getX();
+                curY = event.getY();
+                im.scrollBy((int) (mx - curX), (int) (my - curY));
+                mx = curX;
+                my = curY;
+                break;
+            case MotionEvent.ACTION_UP:
+                curX = event.getX();
+                curY = event.getY();
+                im.scrollBy((int) (mx - curX), (int) (my - curY));
+                break;
+        }
+
         return true;
     }
 
@@ -207,29 +215,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void initialization() {
         Intent intent = getIntent();
-
-        bitmap = BitmapSingleton.getInstance().getBitmap();
-        initialPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-
-
         int orientation = intent.getIntExtra("orientation", 0);
 
-        Bitmap rotatedBitmap = null;
-        switch(orientation) {
+        bitmap = BitmapSingleton.getInstance().getBitmap();
 
+        Bitmap rotatedBitmap = null;
+        switch (orientation) {
             case ExifInterface.ORIENTATION_ROTATE_90:
                 rotatedBitmap = rotateImage(bitmap, 90);
                 break;
-
             case ExifInterface.ORIENTATION_ROTATE_180:
                 rotatedBitmap = rotateImage(bitmap, 180);
                 break;
-
             case ExifInterface.ORIENTATION_ROTATE_270:
                 rotatedBitmap = rotateImage(bitmap, 270);
                 break;
-
             case ExifInterface.ORIENTATION_NORMAL:
             default:
                 rotatedBitmap = bitmap;
@@ -237,13 +237,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         bitmap = rotatedBitmap;
         im.setImageBitmap(bitmap);
+
+        initialPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
     }
 
     public static Bitmap rotateImage(Bitmap source, float angle) {
         Matrix matrix = new Matrix();
         matrix.postRotate(angle);
-        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(),
-                matrix, true);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
     // TODO marche pas -> probleme internal / external storage
@@ -267,14 +269,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
-    }
-
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -425,12 +419,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.setPositiveButton(getString(R.string.validate), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 if (!input.getText().toString().matches("")) {
-                int value = Integer.parseInt(input.getText().toString());
+                    int value = Integer.parseInt(input.getText().toString());
                     switch (type) {
                         case CONTRAST_DIMINUTION:
                             switch (version) {
                                 case JAVA:
-                                    Log.i("aya", String.valueOf(value));
                                     contrastDiminution(value);
                                     break;
                                 case RENDERSCRIPT:
