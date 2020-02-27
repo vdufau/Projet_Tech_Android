@@ -29,6 +29,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.graphics.Color;
 import android.widget.Toast;
@@ -45,6 +46,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 // TODO fragment a la place d'activité
+// TODO rerotate pour res
 
 /**
  * MainActivity Class
@@ -63,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int[] initialPixels;
     private ScaleGestureDetector SGD;
     private float mx, my, curX, curY;
+    private LoadingDialog loadingDialog;
 
     /**
      * Initialization of the application.
@@ -83,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         im = (ImageView) findViewById(R.id.imageView);
 
         initialization();
+
+        loadingDialog = new LoadingDialog(MainActivity.this);
 
         buttonHisto = (Button) findViewById(R.id.buttonHisto);
         buttonHisto.setOnClickListener(this);
@@ -184,7 +189,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivityForResult(intent, 1);
                 break;
             case R.id.saveImage:
+//                loadingDialog.startDialog();
                 saveImage();
+//                loadingDialog.stopDialog();
                 break;
         }
     }
@@ -273,6 +280,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(this, "Sauvegarde impossible", Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
+
     }
 
     /**
