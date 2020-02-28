@@ -5,6 +5,7 @@
     <string name="gray">Niveaux de gris</string>
     <string name="colorize">Colorisation</string>
     <string name="keepColor">Conservation</string>
+    <string name="brightness">Modifier luminosité</string>
     <string name="dynamicExpansion">Extension de dynamique</string>
     <string name="contrastDiminution">Diminution du contraste</string>
     <string name="histogramEqualization">Egalisation d\'histogramme</string>

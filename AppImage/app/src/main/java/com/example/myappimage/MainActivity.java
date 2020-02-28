@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.Canvas
+import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
@@ -15,6 +15,7 @@ import android.graphics.Paint;
 import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.renderscript.Allocation;
 import android.renderscript.RenderScript;
 import android.text.InputType;
@@ -309,6 +310,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+
     /**
      * ---------------
      * |  JAVA PART  |
@@ -440,7 +442,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 builder.setMessage("Le nombre rentré doit être impair");
                 break;
             case BRIGHTNESS:
-                builder.setTitle("Choix du niveau de luminosité de l'image (0-200");
+                builder.setTitle("Choix du niveau de luminosité de l'image (0-200)");
                 break;
         }
         final EditText input = new EditText(this);
@@ -483,7 +485,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         case BRIGHTNESS:
                             switch (version) {
                                 case JAVA:
-                                    if (value<=200 && value >=0) {
+                                    if (value <= 200 && value >= 0) {
                                         bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
                                         changeBitmapBrightness((float) value / 100f);
 
@@ -507,26 +509,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * Modifies the BitMap's brightness.
-     *
-     * @param value the brightness value chosen by the user (0-200)
-     */
-    public void changeBitmapBrightness( float value) {
-        ColorMatrix cm = new ColorMatrix(new float[]
-                {
-                        value, 0, 0, 0, 1,
-                        0, value, 0, 0, 1,
-                        0, 0, value, 0, 1,
-                        0, 0, 0, 1, 0
-                });
-
-        Canvas canvas = new Canvas(bitmap);
-
-        Paint paint = new Paint();
-        paint.setColorFilter(new ColorMatrixColorFilter(cm));
-        canvas.drawBitmap(bitmap, 0, 0, paint);
-    }
-
      * Show a dialog with a radio choice.
      */
     private void radioDialog() {
@@ -648,6 +630,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         return new int[]{inter, interLeft, interRight};
+    }
+
+    /**
+     * Modifies the bitmap's brightness.
+     *
+     * @param value the brightness value chosen by the user (0-200)
+     */
+    private void changeBitmapBrightness(float value) {
+        ColorMatrix cm = new ColorMatrix(new float[]
+                {
+                        value, 0, 0, 0, 1,
+                        0, value, 0, 0, 1,
+                        0, 0, value, 0, 1,
+                        0, 0, 0, 1, 0
+                });
+
+        Canvas canvas = new Canvas(bitmap);
+
+        Paint paint = new Paint();
+        paint.setColorFilter(new ColorMatrixColorFilter(cm));
+        canvas.drawBitmap(bitmap, 0, 0, paint);
     }
 
     /**
