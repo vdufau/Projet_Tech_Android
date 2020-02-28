@@ -549,18 +549,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @param interval the interval to keep
      */
     private void keepColor(int color, int interval) {
-        int interLeft = color - interval / 2;
-        int interRight = color + interval / 2;
-        if (interLeft < 0) {
-            int tmp = interLeft;
-            interLeft = interRight;
-            interRight = 360 + (tmp % 360);
-        }
-        if (interRight > 360) {
-            int tmp = interRight;
-            interRight = interLeft;
-            interLeft = tmp % 360;
-        }
+        int[] intervals = keepColorInteval(color, interval);
+
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         for (int i = 0; i < pixels.length; i++) {
@@ -575,12 +565,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              */
             float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
 
-            if (interLeft < hsv[0] && interRight > hsv[0]) {
-                int pixelGray = (int) pixelToGray(pixels[i]);
-                pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
+            if (intervals[0] == 0) {
+                if (hsv[0] < intervals[1] || intervals[2] < hsv[0]) {
+                    int pixelGray = (int) pixelToGray(pixels[i]);
+                    pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
+                }
+            } else {
+                if (hsv[0] > intervals[1] && intervals[2] > hsv[0]) {
+                    int pixelGray = (int) pixelToGray(pixels[i]);
+                    pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
+                }
             }
         }
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+    }
+
+    /**
+     * Calculate the correct interval for the keepColor algorithm.
+     *
+     * @param color    the hue chosen by the user
+     * @param interval the interval to keep
+     * @return an array with the left and right intervals and a boolean to know if the pixels to change
+     * into grayscale are between the intervals or not
+     */
+    private int[] keepColorInteval(int color, int interval) {
+        int inter = 0;
+        int interLeft = color - interval / 2;
+        int interRight = color + interval / 2;
+        if (interLeft < 0) {
+            inter = 1;
+            int tmp = interLeft;
+            interLeft = interRight;
+            interRight = 360 + (tmp % 360);
+        }
+        if (interRight > 360) {
+            inter = 1;
+            int tmp = interRight;
+            interRight = interLeft;
+            interLeft = tmp % 360;
+        }
+
+        return new int[]{inter, interLeft, interRight};
     }
 
     /**
@@ -873,12 +898,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /**
      * Keep an interval of colors using renderscript.
-     * // TODO adapter comme version java
      *
      * @param color    the color to keep
      * @param interval the interval
      */
     private void keepColorRS(int color, int interval) {
+        int[] intervals = keepColorInteval(color, interval);
+
         RenderScript rs = RenderScript.create(this);
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -887,7 +913,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ScriptC_keepColor keepColorScript = new ScriptC_keepColor(rs);
 
         keepColorScript.set_color(color);
-        keepColorScript.set_interval(interval);
+        keepColorScript.set_inter(intervals[0]);
+        keepColorScript.set_intervalLeft(intervals[1]);
+        keepColorScript.set_intervalRight(intervals[2]);
 
         keepColorScript.forEach_keepColor(input, output);
 
