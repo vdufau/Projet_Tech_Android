@@ -6,20 +6,16 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -27,6 +23,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+/**
+ * LoadActivity Class
+ *
+ * @author Dufau Vincent
+ * Link : https://github.com/vdufau/Projet_Tech_Android
+ */
 public class LoadActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final int IMAGE_PICK_CODE = 100;
@@ -118,6 +120,9 @@ public class LoadActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * Capture an image with the camera's phone.
+     */
     private void openCamera() {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.TITLE, "New picture");

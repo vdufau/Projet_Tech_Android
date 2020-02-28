@@ -19,7 +19,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity"></activity>
-        <activity android:name=".HistogramActivity"></activity>
+        <activity android:name=".MainActivity"
+            android:parentActivityName="com.example.myappimage.LoadActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.myappimage.LoadActivity" />
+        </activity>
+        <activity android:name=".HistogramActivity"
+            android:parentActivityName="com.example.myappimage.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.myappimage.MainActivity" />
+        </activity>
     </application>
 </manifest>

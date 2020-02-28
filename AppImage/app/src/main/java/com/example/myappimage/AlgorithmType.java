@@ -4,7 +4,7 @@ package com.example.myappimage;
  * AlgorithmType Enum
  *
  * @author Dufau Vincent
- * Link : https://github.com/vdufau/Projet_Tech_L3
+ * Link : https://github.com/vdufau/Projet_Tech_Android
  */
 public enum AlgorithmType {
     COLORIZE,
