@@ -14,6 +14,9 @@
                 android:id="@+id/keepColor"
                 android:title="@string/keepColor" />
             <item
+                android:id="@+id/brightness"
+                android:title="Modifier Luminosité" />
+            <item
                 android:id="@+id/dynamicExpansion"
                 android:title="@string/dynamicExpansion" />
             <item

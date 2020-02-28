@@ -1,7 +1,5 @@
 package com.example.myappimage;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,13 +7,14 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Canvas
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.renderscript.Allocation;
 import android.renderscript.RenderScript;
 import android.text.InputType;
@@ -30,6 +29,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.graphics.Color;
 import android.widget.Toast;
 
@@ -139,6 +141,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return true;
             case R.id.keepColorRS:
                 colorDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.KEEP_COLOR);
+                return true;
+            case R.id.brightness:
+                inputDialog(AlgorithmVersion.JAVA, AlgorithmType.BRIGHTNESS);
                 return true;
             case R.id.dynamicExpansion:
                 dynamicExpansion();
@@ -434,6 +439,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 builder.setTitle("Choix de la taille du noyau de convolution");
                 builder.setMessage("Le nombre rentré doit être impair");
                 break;
+            case BRIGHTNESS:
+                builder.setTitle("Choix du niveau de luminosité de l'image (0-200");
+                break;
         }
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -472,6 +480,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     }
                                     break;
                             }
+                        case BRIGHTNESS:
+                            switch (version) {
+                                case JAVA:
+                                    if (value<=200 && value >=0) {
+                                        bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                                        changeBitmapBrightness((float) value / 100f);
+
+                                    } else {
+                                        inputDialog(AlgorithmVersion.JAVA, AlgorithmType.BRIGHTNESS);
+                                    }
+                                    break;
+                                case RENDERSCRIPT:
+                                    break;
+                            }
                     }
                 }
             }
@@ -485,6 +507,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
+     * Modifies the BitMap's brightness.
+     *
+     * @param value the brightness value chosen by the user (0-200)
+     */
+    public void changeBitmapBrightness( float value) {
+        ColorMatrix cm = new ColorMatrix(new float[]
+                {
+                        value, 0, 0, 0, 1,
+                        0, value, 0, 0, 1,
+                        0, 0, value, 0, 1,
+                        0, 0, 0, 1, 0
+                });
+
+        Canvas canvas = new Canvas(bitmap);
+
+        Paint paint = new Paint();
+        paint.setColorFilter(new ColorMatrixColorFilter(cm));
+        canvas.drawBitmap(bitmap, 0, 0, paint);
+    }
+
      * Show a dialog with a radio choice.
      */
     private void radioDialog() {
