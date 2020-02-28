@@ -44,13 +44,13 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-// TODO fragment a la place d'activité
+import static com.example.myappimage.PixelTransformation.*;
 
 /**
  * MainActivity Class
  *
  * @author Dufau Vincent
- * Link : https://github.com/vdufau/Projet_Tech_L3
+ * Link : https://github.com/vdufau/Projet_Tech_Android
  */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int[] initialPixels;
     private ScaleGestureDetector SGD;
     private float mx, my, curX, curY;
+    private int gaussChoice;
 
     /**
      * Initialization of the application.
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -106,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     /**
@@ -162,11 +164,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.averageFilterRS:
                 inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
                 return true;
+            case R.id.gaussConvolution:
+                radioDialog();
+                return true;
             case R.id.sobelConvolution:
                 sobelFilterConvolution();
                 return true;
             case R.id.sobelConvolutionRS:
 //                sobelFilterConvolutionRS();
+                return true;
+            case R.id.laplacienConvolution:
+                laplacienFilterConvolution();
                 return true;
             case R.id.reinitialization:
                 bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
@@ -176,6 +184,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * Associate functions to the activity's buttons.
+     *
+     * @param v the button clicked
+     */
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -189,6 +202,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * Management of the touch event with the scroll and the zoom.
+     *
+     * @param event the event
+     * @return true
+     */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         SGD.onTouchEvent(event);
@@ -216,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * Initialize the bitmap.
+     * Initialize the bitmap with a rotation if needed.
      */
     private void initialization() {
         Intent intent = getIntent();
@@ -247,12 +266,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bitmap.getPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
     }
 
+    /**
+     * Rotate a bitmap.
+     *
+     * @param source the bitmap to rotate
+     * @param angle  the rotation's angle
+     * @return the new bitmap after the rotation
+     */
     public static Bitmap rotateImage(Bitmap source, float angle) {
         Matrix matrix = new Matrix();
         matrix.postRotate(angle);
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
+    /**
+     * Save the image with all the modifications the user has done.
+     */
     private void saveImage() {
         String path = Environment.getExternalStorageDirectory().toString();
         OutputStream out = null;
@@ -281,15 +310,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * ---------------
      */
 
-    /**
-     * Transform a pixel into a pixel which will be in gray scale.
-     *
-     * @param pixel the pixel to transform
-     * @return the gray pixel
-     */
-    public int pixelToGray(int pixel) {
-        return (int) (0.3 * Color.red(pixel) + 0.59 * Color.green(pixel) + 0.11 * Color.blue(pixel));
-    }
 
     /**
      * @deprecated First version of image transformation to gray.
@@ -299,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (int i = 0; i < bitmap.getWidth(); i++) {
             for (int j = 0; j < bitmap.getHeight(); j++) {
                 int pixel = bitmap.getPixel(i, j);
-                int pixelGray = pixelToGray(pixel);
+                int pixelGray = (int) pixelToGray(pixel);
                 int newPixel = Color.argb(Color.alpha(pixel), pixelGray, pixelGray, pixelGray);
                 bitmap.setPixel(i, j, newPixel);
             }
@@ -314,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         for (int i = 0; i < pixels.length; i++) {
-            int pixelGray = pixelToGray(pixels[i]);
+            int pixelGray = (int) pixelToGray(pixels[i]);
             pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
         }
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
@@ -465,6 +485,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
+     * Show a dialog with a radio choice.
+     */
+    private void radioDialog() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        final String[] list = getResources().getStringArray(R.array.gauss_choices);
+        gaussChoice = Integer.parseInt(list[0]);
+        builder.setTitle("Choix de la taille du filtre de Gauss")
+                .setSingleChoiceItems(list, 0, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        gaussChoice = Integer.parseInt(list[which]);
+                    }
+                })
+                .setPositiveButton(getString(R.string.validate), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        gaussianFilterConvolution();
+                    }
+                })
+                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        builder.show();
+    }
+
+    /**
      * Colorize the bitmap with a hue.
      *
      * @param color the hue chosen by the user
@@ -527,7 +576,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
 
             if (interLeft < hsv[0] && interRight > hsv[0]) {
-                int pixelGray = pixelToGray(pixels[i]);
+                int pixelGray = (int) pixelToGray(pixels[i]);
                 pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
             }
         }
@@ -661,121 +710,113 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
+     * Apply a Gaussian filter on the image.
+     * It will blur the image.
+     */
+    public void gaussianFilterConvolution() {
+        double[][] gauss;
+        if (gaussChoice == 3) {
+            gauss = new double[][]{
+                    {1.0, 2.0, 1.0},
+                    {2.0, 4.0, 2.0},
+                    {1.0, 2.0, 1.0}
+            };
+        } else {
+            gauss = new double[][]{
+                    {1.0, 2.0, 3.0, 2.0, 1.0},
+                    {2.0, 6.0, 8.0, 6.0, 2.0},
+                    {3.0, 8.0, 10.0, 8.0, 3.0},
+                    {2.0, 6.0, 8.0, 6.0, 2.0},
+                    {1.0, 2.0, 3.0, 2.0, 1.0}
+            };
+        }
+
+        double total = 0.0;
+        for (int i = 0; i < gauss.length; i++) {
+            for (int j = 0; j < gauss[i].length; j++) {
+                total += gauss[i][j];
+            }
+        }
+        for (int i = 0; i < gauss.length; i++) {
+            for (int j = 0; j < gauss[i].length; j++) {
+                gauss[i][j] = gauss[i][j] / total;
+            }
+        }
+
+        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(gaussChoice);
+        convolutionMatrix.setMatrix(gauss);
+        int[] pixels = convolutionMatrix.applyConvolution(bitmap);
+        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+    }
+
+    /**
      * Apply a Sobel filter on the image.
      * It will mark the image outlines.
      */
     public void sobelFilterConvolution() {
+        toGraySecondVersion();
+
         double[][] sobelHorizontal = new double[][]{
                 {-1, 0, 1},
                 {-2, 0, 2},
                 {-1, 0, 1}
         };
         double[][] sobelVertical = new double[][]{
-                {1, 2, 1},
+                {-1, -2, -1},
                 {0, 0, 0},
-                {-1, -2, -1}
+                {1, 2, 1}
         };
 
-        int size = 3;
-        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(size);
+        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(3);
+
         convolutionMatrix.setMatrix(sobelHorizontal);
-        int[] sobelPixelsHorizontal = convolutionMatrix.applyConvolution(bitmap);
+        int[] sobelPixelsHorizontal = convolutionMatrix.applyConvolutionOnGrayImage(bitmap);
+
         convolutionMatrix.setMatrix(sobelVertical);
-        int[] sobelPixelsVertical = convolutionMatrix.applyConvolution(bitmap);
+        int[] sobelPixelsVertical = convolutionMatrix.applyConvolutionOnGrayImage(bitmap);
+
         int[] sobelPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
 
         for (int i = 0; i < sobelPixels.length; i++) {
-            int pixelRed = (int) Math.sqrt(Math.pow(Color.red(sobelPixelsHorizontal[i]), 2) + Math.pow(Color.red(sobelPixelsVertical[i]), 2));
-            int pixelGreen = (int) Math.sqrt(Math.pow(Color.green(sobelPixelsHorizontal[i]), 2) + Math.pow(Color.green(sobelPixelsVertical[i]), 2));
-            int pixelBlue = (int) Math.sqrt(Math.pow(Color.blue(sobelPixelsHorizontal[i]), 2) + Math.pow(Color.blue(sobelPixelsVertical[i]), 2));
-            sobelPixels[i] = Color.argb(Color.alpha(sobelPixelsHorizontal[i]),
-                    pixelRed > 255 ? 255 : pixelRed,
-                    pixelGreen > 255 ? 255 : pixelGreen,
-                    pixelBlue > 255 ? 255 : pixelBlue);
+            int newPixel = (int) Math.sqrt(sobelPixelsHorizontal[i] * sobelPixelsHorizontal[i] + sobelPixelsVertical[i] * sobelPixelsVertical[i]);
+            if (newPixel > 255) newPixel = 255;
+            sobelPixels[i] = Color.argb(Color.alpha(pixels[i]), newPixel, newPixel, newPixel);
         }
 
         bitmap.setPixels(sobelPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
     }
 
     /**
-     * Recoded function to transform rgb values into hsv values.
-     *
-     * @param red   the red value of the pixel [0-255]
-     * @param green the green value of the pixel [0-255]
-     * @param blue  the blue value of the pixel [0-255]
-     * @return an array which contain the hue, the saturation and the value of the pixel
+     * Apply a Laplacien filter on the image.
+     * It will mark the image outlines.
      */
-    private float[] myRgbToHsv(float red, float green, float blue) {
-        float r = red / 255;
-        float g = green / 255;
-        float b = blue / 255;
+    public void laplacienFilterConvolution() {
+        toGraySecondVersion();
 
-        float max = Math.max(r, Math.max(g, b));
-        float min = Math.min(r, Math.min(g, b));
-        float d = max - min;
-        float h, s, v;
+        double[][] laplacien = new double[][]{
+                {1, 1, 1},
+                {1, -8, 1},
+                {1, 1, 1}
+        };
 
-        if (max == min)
-            h = 0;
-        else if (max == r)
-            h = (60 * ((g - b) / d) + 360) % 360;
-        else if (max == g)
-            h = (60 * ((b - r) / d) + 120) % 360;
-        else
-            h = (60 * ((r - g) / d) + 240) % 360;
+        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
 
-        if (max == 0)
-            s = 0;
-        else
-            s = (d / max) * 100;
+        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(3);
+        convolutionMatrix.setMatrix(laplacien);
+        int[] results = convolutionMatrix.applyConvolutionOnGrayImage(bitmap);
 
-        v = max * 100;
-
-        return new float[]{h, s, v};
-    }
-
-    /**
-     * Recoded function to transform hsv values into rgb values.
-     *
-     * @param h the hue of the pixel [0-360]
-     * @param s the saturation of the pixel [0-1]
-     * @param v the value of the pixel [0-1]
-     * @return an array which contain the red value, the green value and the blue value of the pixel
-     */
-    private float[] myHsvToRgb(float h, float s, float v) {
-        float c = s * v;
-        float newH = h / 60;
-        float x = c * (1 - Math.abs((newH % 2) - 1));
-        float r, g, b;
-
-        if (0 <= newH && newH < 1) {
-            r = c;
-            g = x;
-            b = 0;
-        } else if (1 <= newH && newH < 2) {
-            r = x;
-            g = c;
-            b = 0;
-        } else if (2 <= newH && newH < 3) {
-            r = 0;
-            g = c;
-            b = x;
-        } else if (3 <= newH && newH < 4) {
-            r = 0;
-            g = x;
-            b = c;
-        } else if (4 <= newH && newH < 5) {
-            r = x;
-            g = 0;
-            b = c;
-        } else {
-            r = c;
-            g = 0;
-            b = x;
+        int[] laplacienPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        for (int i = 0; i < laplacienPixels.length; i++) {
+            int newPixel = results[i];
+            if (newPixel > 255) newPixel = 255;
+            if (newPixel < 0) newPixel = 0;
+            laplacienPixels[i] = Color.argb(Color.alpha(pixels[i]), newPixel, newPixel, newPixel);
         }
-
-        float m = v - c;
-        return new float[]{(r + m) * 255, (g + m) * 255, (b + m) * 255};
+        bitmap.setPixels(laplacienPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
     }
 
     /**

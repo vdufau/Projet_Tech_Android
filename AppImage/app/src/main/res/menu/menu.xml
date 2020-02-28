@@ -26,8 +26,14 @@
                 android:id="@+id/averageFilter"
                 android:title="@string/averageFilter" />
             <item
+                android:id="@+id/gaussConvolution"
+                android:title="@string/gaussConvolution" />
+            <item
                 android:id="@+id/sobelConvolution"
                 android:title="@string/sobelConvolution" />
+            <item
+                android:id="@+id/laplacienConvolution"
+                android:title="@string/laplacienConvolution" />
         </menu>
     </item>
     <item

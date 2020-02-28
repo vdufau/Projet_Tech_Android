@@ -12,8 +12,17 @@
     <string name="back">Retour</string>
     <string name="histo">Obtenir l\'histogramme</string>
     <string name="averageFilter">Filtre moyenneur</string>
-    <string name="sobelConvolution">Détection de contours</string>
+    <string name="gaussConvolution">Filtre Gaussien</string>
+    <string name="sobelConvolution">Filtre de Sobel</string>
+    <string name="laplacienConvolution">Filtre Laplacien</string>
     <string name="validate">OK</string>
     <string name="cancel">ANNULER</string>
     <string name="saveImage">Sauvegarder l\'image</string>
+    <string name="gallery">Charger une image</string>
+    <string name="photo">Prendre une photo</string>
+
+    <string-array name="gauss_choices">
+        <item>3</item>
+        <item>5</item>
+    </string-array>
 </resources>

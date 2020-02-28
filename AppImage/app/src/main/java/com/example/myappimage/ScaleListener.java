@@ -1,5 +1,11 @@
 package com.example.myappimage;
 
+/**
+ * ScaleListener Class
+ *
+ * @author Dufau Vincent
+ * Link : https://github.com/vdufau/Projet_Tech_Android
+ */
 public class ScaleListener extends android.view.ScaleGestureDetector.SimpleOnScaleGestureListener {
     private float scale;
 
