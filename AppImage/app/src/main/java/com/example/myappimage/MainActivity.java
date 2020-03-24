@@ -18,8 +18,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.renderscript.Allocation;
 import android.renderscript.RenderScript;
-import android.text.InputType;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -27,7 +25,6 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -36,8 +33,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.graphics.Color;
 import android.widget.Toast;
 
+import com.example.myappimage.dialog.*;
 import com.skydoves.colorpickerview.ColorPickerDialog;
-import com.skydoves.colorpickerview.listeners.ColorListener;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -66,7 +63,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int[] initialPixels;
     private ScaleGestureDetector SGD;
     private float mx, my, curX, curY;
-    private int gaussChoice;
 
     /**
      * Initialization of the application.
@@ -132,19 +128,84 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 toGrayRS();
                 return true;
             case R.id.colorize:
-                colorDialog(AlgorithmVersion.JAVA, AlgorithmType.COLORIZE);
+                final CustomColorDialog colorizeDialog = new CustomColorDialog("Choix de la couleur", null, this);
+                ((ColorPickerDialog.Builder) colorizeDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = colorizeDialog.getValue();
+                        if (value >= 0)
+                            colorize(value);
+                    }
+                });
+                ((ColorPickerDialog.Builder) colorizeDialog.getBuilder()).show();
                 return true;
             case R.id.colorizeRS:
-                colorDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.COLORIZE);
+                final CustomColorDialog colorizeRSDialog = new CustomColorDialog("Choix de la couleur (RS)", null, this);
+                ((ColorPickerDialog.Builder) colorizeRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = colorizeRSDialog.getValue();
+                        if (value >= 0)
+                            colorizeRS(value);
+                    }
+                });
+                ((ColorPickerDialog.Builder) colorizeRSDialog.getBuilder()).show();
                 return true;
             case R.id.keepColor:
-                colorDialog(AlgorithmVersion.JAVA, AlgorithmType.KEEP_COLOR);
+                final CustomColorDialog keepColorDialog = new CustomColorDialog("Choix de la couleur", null, this);
+                ((ColorPickerDialog.Builder) keepColorDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        final int h = keepColorDialog.getValue();
+                        final CustomInputDialog intervalDialog = new CustomInputDialog("Choix de l'intervalle", "Choississez la valeur de l'intervalle total à garder", context);
+                        ((AlertDialog.Builder) intervalDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialog) {
+                                int value = intervalDialog.getValue();
+                                if (value >= 0 && value <= 360) {
+                                    keepColor(h, value);
+                                }
+                            }
+                        });
+                        ((AlertDialog.Builder) intervalDialog.getBuilder()).show();
+                    }
+                });
+                ((ColorPickerDialog.Builder) keepColorDialog.getBuilder()).show();
                 return true;
             case R.id.keepColorRS:
-                colorDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.KEEP_COLOR);
+                final CustomColorDialog keepColorRSDialog = new CustomColorDialog("Choix de la couleur (RS)", null, this);
+                ((ColorPickerDialog.Builder) keepColorRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        final int h = keepColorRSDialog.getValue();
+                        final CustomInputDialog intervalRSDialog = new CustomInputDialog("Choix de l'intervalle", "Choississez la valeur de l'intervalle total à garder", context);
+                        ((AlertDialog.Builder) intervalRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialog) {
+                                int value = intervalRSDialog.getValue();
+                                if (value >= 0 && value <= 360) {
+                                    keepColorRS(h, value);
+                                }
+                            }
+                        });
+                        ((AlertDialog.Builder) intervalRSDialog.getBuilder()).show();
+                    }
+                });
+                ((ColorPickerDialog.Builder) keepColorRSDialog.getBuilder()).show();
                 return true;
             case R.id.brightness:
-                inputDialog(AlgorithmVersion.JAVA, AlgorithmType.BRIGHTNESS);
+                final CustomInputDialog brightnessDialog = new CustomInputDialog("Choix du niveau de luminosité de l'image (0-200)", null, this);
+                ((AlertDialog.Builder) brightnessDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = brightnessDialog.getValue();
+                        if (value <= 200 && value >= 0) {
+                            bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                            changeBitmapBrightness((float) value / 100f);
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) brightnessDialog.getBuilder()).show();
                 return true;
             case R.id.dynamicExpansion:
                 dynamicExpansion();
@@ -153,10 +214,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 dynamicExpansionRS();
                 return true;
             case R.id.contrastDiminution:
-                inputDialog(AlgorithmVersion.JAVA, AlgorithmType.CONTRAST_DIMINUTION);
+                final CustomInputDialog contrastDialog = new CustomInputDialog("Choix de la diminution", null, this);
+                ((AlertDialog.Builder) contrastDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = contrastDialog.getValue();
+                        if (value > 0)
+                            contrastDiminution(value);
+                    }
+                });
+                ((AlertDialog.Builder) contrastDialog.getBuilder()).show();
                 return true;
             case R.id.contrastDiminutionRS:
-                inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.CONTRAST_DIMINUTION);
+                final CustomInputDialog constrastRSDialog = new CustomInputDialog("Choix de la diminution (RS)", null, this);
+                ((AlertDialog.Builder) constrastRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = constrastRSDialog.getValue();
+                        if (value > 0)
+                            contrastDiminutionRS(value);
+                    }
+                });
+                ((AlertDialog.Builder) constrastRSDialog.getBuilder()).show();
                 return true;
             case R.id.histogramEqualization:
                 histogramEqualization();
@@ -165,13 +244,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 histogramEqualizationRS();
                 return true;
             case R.id.averageFilter:
-                inputDialog(AlgorithmVersion.JAVA, AlgorithmType.AVERAGE_CONVOLUTION);
+                final CustomInputDialog averageDialog = new CustomInputDialog("Choix de la taille du noyau de convolution", "Le nombre rentré doit être impair", this);
+                ((AlertDialog.Builder) averageDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = averageDialog.getValue();
+                        if (value > 0 && value % 2 == 1)
+                            averageFilterConvolution(value);
+                        else
+                            Toast.makeText(context, "Nombre invalide", Toast.LENGTH_LONG).show();
+                    }
+                });
+                ((AlertDialog.Builder) averageDialog.getBuilder()).show();
                 return true;
             case R.id.averageFilterRS:
-                inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
+//                inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
                 return true;
             case R.id.gaussConvolution:
-                radioDialog();
+                final String[] list = getResources().getStringArray(R.array.gauss_choices);
+                final CustomRadioDialog gaussDialog = new CustomRadioDialog("Choix de la taille du filtre de Gauss", null, this, list);
+                ((AlertDialog.Builder) gaussDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = gaussDialog.getValue();
+                        if (value >= 0)
+                            gaussianFilterConvolution(Integer.parseInt(list[value]));
+                    }
+                });
+                ((AlertDialog.Builder) gaussDialog.getBuilder()).show();
                 return true;
             case R.id.sobelConvolution:
                 sobelFilterConvolution();
@@ -356,185 +456,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         m.setSaturation(0);
         ColorMatrixColorFilter filter = new ColorMatrixColorFilter(m);
         im.setColorFilter(filter);
-    }
-
-    /**
-     * Show a color dialog to choose one color which will be useful to an image transformation algorithm.
-     * Use of an external widget : ColorPickerView
-     * Link : https://github.com/skydoves/ColorPickerView
-     *
-     * @param version the version of the algorithm to execute
-     * @param type    the type of algorithm
-     */
-    private void colorDialog(final AlgorithmVersion version, final AlgorithmType type) {
-        new ColorPickerDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
-                .setTitle("Choix de la couleur")
-                .setPositiveButton(getString(R.string.validate), new ColorListener() {
-                    @Override
-                    public void onColorSelected(int color, boolean fromUser) {
-                        final int h = (int) myRgbToHsv(Color.red(color), Color.green(color), Color.blue(color))[0];
-                        switch (type) {
-                            case COLORIZE:
-                                switch (version) {
-                                    case JAVA:
-                                        colorize(h);
-                                        break;
-                                    case RENDERSCRIPT:
-                                        colorizeRS(h);
-                                        break;
-                                }
-                                break;
-                            case KEEP_COLOR:
-                                final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                                builder.setTitle("Choix de l'intervalle");
-                                builder.setMessage("Choississez la valeur de l'intervalle total à garder");
-                                final EditText input = new EditText(context);
-                                input.setInputType(InputType.TYPE_CLASS_NUMBER);
-                                input.setRawInputType(Configuration.KEYBOARD_12KEY);
-                                builder.setView(input);
-
-                                builder.setPositiveButton(getString(R.string.validate), new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int whichButton) {
-                                        int interval = Integer.parseInt(input.getText().toString());
-                                        switch (version) {
-                                            case JAVA:
-                                                keepColor(h, interval);
-                                                break;
-                                            case RENDERSCRIPT:
-                                                keepColorRS(h, interval);
-                                                break;
-                                        }
-                                    }
-                                });
-                                builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int whichButton) {
-                                        dialog.dismiss();
-                                    }
-                                });
-                                builder.show();
-                                break;
-                        }
-                    }
-                })
-                .setNegativeButton(getString(R.string.cancel),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-                            }
-                        })
-                .attachAlphaSlideBar(false)
-                .attachBrightnessSlideBar(false)
-                .show();
-    }
-
-    /**
-     * Show an input dialog to choose a value.
-     */
-    private void inputDialog(final AlgorithmVersion version, final AlgorithmType type) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        switch (type) {
-            case CONTRAST_DIMINUTION:
-                builder.setTitle("Choix de la diminution");
-                break;
-            case AVERAGE_CONVOLUTION:
-                builder.setTitle("Choix de la taille du noyau de convolution");
-                builder.setMessage("Le nombre rentré doit être impair");
-                break;
-            case BRIGHTNESS:
-                builder.setTitle("Choix du niveau de luminosité de l'image (0-200)");
-                break;
-        }
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
-        input.setRawInputType(Configuration.KEYBOARD_12KEY);
-        builder.setView(input);
-
-        builder.setPositiveButton(getString(R.string.validate), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                if (!input.getText().toString().matches("")) {
-                    int value = Integer.parseInt(input.getText().toString());
-                    switch (type) {
-                        case CONTRAST_DIMINUTION:
-                            switch (version) {
-                                case JAVA:
-                                    contrastDiminution(value);
-                                    break;
-                                case RENDERSCRIPT:
-                                    contrastDiminutionRS(value);
-                                    break;
-                            }
-                            break;
-                        case AVERAGE_CONVOLUTION:
-                            switch (version) {
-                                case JAVA:
-                                    if (value % 2 == 1) {
-                                        averageFilterConvolution(value);
-                                    } else {
-                                        inputDialog(AlgorithmVersion.JAVA, AlgorithmType.AVERAGE_CONVOLUTION);
-                                    }
-                                    break;
-                                case RENDERSCRIPT:
-                                    if (value % 2 == 1) {
-//                                    averageFilterConvolutionRS(value);
-                                    } else {
-                                        inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
-                                    }
-                                    break;
-                            }
-                        case BRIGHTNESS:
-                            switch (version) {
-                                case JAVA:
-                                    if (value <= 200 && value >= 0) {
-                                        bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-                                        changeBitmapBrightness((float) value / 100f);
-
-                                    } else {
-                                        inputDialog(AlgorithmVersion.JAVA, AlgorithmType.BRIGHTNESS);
-                                    }
-                                    break;
-                                case RENDERSCRIPT:
-                                    break;
-                            }
-                    }
-                }
-            }
-        });
-        builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                dialog.dismiss();
-            }
-        });
-        builder.show();
-    }
-
-    /**
-     * Show a dialog with a radio choice.
-     */
-    private void radioDialog() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        final String[] list = getResources().getStringArray(R.array.gauss_choices);
-        gaussChoice = Integer.parseInt(list[0]);
-        builder.setTitle("Choix de la taille du filtre de Gauss")
-                .setSingleChoiceItems(list, 0, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        gaussChoice = Integer.parseInt(list[which]);
-                    }
-                })
-                .setPositiveButton(getString(R.string.validate), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        gaussianFilterConvolution();
-                    }
-                })
-                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-        builder.show();
     }
 
     /**
@@ -783,9 +704,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Apply a Gaussian filter on the image.
      * It will blur the image.
      */
-    public void gaussianFilterConvolution() {
+    public void gaussianFilterConvolution(int size) {
         double[][] gauss;
-        if (gaussChoice == 3) {
+        if (size == 3) {
             gauss = new double[][]{
                     {1.0, 2.0, 1.0},
                     {2.0, 4.0, 2.0},
@@ -813,7 +734,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(gaussChoice);
+        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(size);
         convolutionMatrix.setMatrix(gauss);
         int[] pixels = convolutionMatrix.applyConvolution(bitmap);
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
