@@ -8,21 +8,28 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.FloatMath;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.widget.Toast;
 
@@ -45,7 +52,7 @@ import java.util.Date;
  * @author Dufau Vincent
  * Link : https://github.com/vdufau/Projet_Tech_Android
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
 
     private Context context = this;
     private static TextView tv;
@@ -54,10 +61,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static ImageView im;
     private Bitmap bitmap;
     private int[] initialPixels;
-    private ScaleGestureDetector SGD;
-    private float mx, my, curX, curY;
     private JavaAlgorithm java;
     private RenderscriptAlgorithm rs;
+
+    private Matrix matrix = new Matrix();
+    private Matrix savedMatrix = new Matrix();
+
+    private static final int NONE = 0;
+    private static final int DRAG = 1;
+    private static final int ZOOM = 2;
+    private int mode = NONE;
+
+    private PointF start = new PointF();
+    private PointF mid = new PointF();
+    private float oldDist = 1f;
 
     /**
      * Initialization of the application.
@@ -75,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        tv = (TextView) findViewById(R.id.sizeImage);
+//        tv = (TextView) findViewById(R.id.sizeImage);
         im = (ImageView) findViewById(R.id.imageView);
 
         initialization();
@@ -88,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         buttonSave = (Button) findViewById(R.id.saveImage);
         buttonSave.setOnClickListener(this);
 
-        SGD = new ScaleGestureDetector(this, new ScaleListener());
+        im.setOnTouchListener(this);
     }
 
     public static ImageView getIm() {
@@ -323,33 +340,75 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * Management of the touch event with the scroll and the zoom.
      *
+     * @param v     the view on which the event is applied
      * @param event the event
      * @return true
      */
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        SGD.onTouchEvent(event);
+    public boolean onTouch(View v, MotionEvent event) {
+        ImageView view = (ImageView) v;
+        view.setScaleType(ImageView.ScaleType.MATRIX);
 
-        switch (event.getAction()) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
-                mx = event.getX();
-                my = event.getY();
+                savedMatrix.set(matrix);
+                start.set(event.getX(), event.getY());
+                mode = DRAG;
                 break;
-            case MotionEvent.ACTION_MOVE:
-                curX = event.getX();
-                curY = event.getY();
-                im.scrollBy((int) (mx - curX), (int) (my - curY));
-                mx = curX;
-                my = curY;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                oldDist = spacing(event);
+                if (oldDist > 10f) {
+                    savedMatrix.set(matrix);
+                    midPoint(mid, event);
+                    mode = ZOOM;
+                }
                 break;
             case MotionEvent.ACTION_UP:
-                curX = event.getX();
-                curY = event.getY();
-                im.scrollBy((int) (mx - curX), (int) (my - curY));
+            case MotionEvent.ACTION_POINTER_UP:
+                mode = NONE;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mode == DRAG) {
+                    matrix.set(savedMatrix);
+                    matrix.postTranslate(event.getX() - start.x, event.getY() - start.y);
+                } else if (mode == ZOOM) {
+                    float newDist = spacing(event);
+                    if (newDist > 10f) {
+                        matrix.set(savedMatrix);
+                        float scale = newDist / oldDist;
+                        matrix.postScale(scale, scale, mid.x, mid.y);
+                    }
+                }
                 break;
         }
 
+        view.setImageMatrix(matrix);
         return true;
+    }
+
+    /**
+     * Return the distance between the two fingers for a zoom event.
+     *
+     * @param event the event
+     * @return the distance
+     */
+    private float spacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float) Math.sqrt(x * x + y * y);
+    }
+
+
+    /**
+     * Set a point to the center of the line created by the two fingers for a zoom event.
+     *
+     * @param point the point to set
+     * @param event the event
+     */
+    private void midPoint(PointF point, MotionEvent event) {
+        float x = event.getX(0) + event.getX(1);
+        float y = event.getY(0) + event.getY(1);
+        point.set(x / 2, y / 2);
     }
 
     /**

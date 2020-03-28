@@ -92,7 +92,7 @@ public class ConvolutionMatrix {
      * Apply the matrix to each pixel of the gray bitmap.
      *
      * @param bitmap the bitmap to transform
-     * @return an array which contain the gradient of each pixel
+     * @return an array which contain the new pixels values
      */
     public int[] applyConvolutionOnGrayImage(Bitmap bitmap) {
         int width = bitmap.getWidth();
