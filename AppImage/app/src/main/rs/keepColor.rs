@@ -2,7 +2,6 @@
 #pragma rs java_package_name(com.example.myappimage.algorithm)
 
 static const float4 weight = {0.299f, 0.587f, 0.114f, 0.0f};
-int color;
 int inter;
 int intervalLeft;
 int intervalRight;
@@ -25,7 +24,7 @@ uchar4 RS_KERNEL keepColor(uchar4 in) {
         h = (pixelf.r - pixelf.g) / d + 4;
     }
 
-    if (inter == 0) {
+    if (inter == 1) {
         if (h * 60 < intervalLeft || intervalRight < h * 60) {
             const float gray = dot(pixelf, weight);
             return rsPackColorTo8888(gray, gray, gray, pixelf.a);

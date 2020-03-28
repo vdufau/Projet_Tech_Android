@@ -5,6 +5,12 @@ import android.graphics.Bitmap;
 import android.renderscript.Allocation;
 import android.renderscript.RenderScript;
 
+/**
+ * RenderscriptAlgorithm Class
+ *
+ * @author Dufau Vincent
+ * Link : https://github.com/vdufau/Projet_Tech_Android
+ */
 public class RenderscriptAlgorithm extends Algorithm {
     private Context context;
 
@@ -64,12 +70,13 @@ public class RenderscriptAlgorithm extends Algorithm {
     /**
      * Keep an interval of colors using renderscript.
      *
-     * @param color    the color to keep
-     * @param interval the interval
+     * @param h       the first hue chosen by the user
+     * @param secondH the second hue chosen by the user
+     * @param inter   the parameter which determine if the colors to keep are between the two hues or not
      */
-    public void keepColorRS(int color, int interval) {
+    public void keepColorRS(int h, int secondH, int inter) {
         Bitmap bitmap = getBitmap();
-        int[] intervals = keepColorInteval(color, interval);
+        int[] interval = keepColorInteval(h, secondH);
 
         RenderScript rs = RenderScript.create(context);
 
@@ -78,10 +85,9 @@ public class RenderscriptAlgorithm extends Algorithm {
 
         ScriptC_keepColor keepColorScript = new ScriptC_keepColor(rs);
 
-        keepColorScript.set_color(color);
-        keepColorScript.set_inter(intervals[0]);
-        keepColorScript.set_intervalLeft(intervals[1]);
-        keepColorScript.set_intervalRight(intervals[2]);
+        keepColorScript.set_inter(inter);
+        keepColorScript.set_intervalLeft(interval[0]);
+        keepColorScript.set_intervalRight(interval[1]);
 
         keepColorScript.forEach_keepColor(input, output);
 

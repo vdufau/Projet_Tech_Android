@@ -9,10 +9,14 @@ import android.graphics.Paint;
 
 import com.example.myappimage.ConvolutionMatrix;
 
-import static com.example.myappimage.PixelTransformation.myHsvToRgb;
-import static com.example.myappimage.PixelTransformation.myRgbToHsv;
-import static com.example.myappimage.PixelTransformation.pixelToGray;
+import static com.example.myappimage.PixelTransformation.*;
 
+/**
+ * JavaAlgorithm Class
+ *
+ * @author Dufau Vincent
+ * Link : https://github.com/vdufau/Projet_Tech_Android
+ */
 public class JavaAlgorithm extends Algorithm {
 
     public JavaAlgorithm(Bitmap bitmap) {
@@ -94,12 +98,13 @@ public class JavaAlgorithm extends Algorithm {
     /**
      * Keep an interval of color of the bitmap and colorize the pixels which are not in this interval in gray scale.
      *
-     * @param color    the hue chosen by the user
-     * @param interval the interval to keep
+     * @param h       the first hue chosen by the user
+     * @param secondH the second hue chosen by the user
+     * @param inter   the parameter which determine if the colors to keep are between the two hues or not
      */
-    public void keepColor(int color, int interval) {
+    public void keepColor(int h, int secondH, boolean inter) {
         Bitmap bitmap = getBitmap();
-        int[] intervals = keepColorInteval(color, interval);
+        int[] interval = keepColorInteval(h, secondH);
 
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
@@ -115,13 +120,13 @@ public class JavaAlgorithm extends Algorithm {
              */
             float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
 
-            if (intervals[0] == 0) {
-                if (hsv[0] < intervals[1] || intervals[2] < hsv[0]) {
+            if (inter) {
+                if (hsv[0] < interval[0] || interval[1] < hsv[0]) {
                     int pixelGray = (int) pixelToGray(pixels[i]);
                     pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
                 }
             } else {
-                if (hsv[0] > intervals[1] && intervals[2] > hsv[0]) {
+                if (hsv[0] > interval[0] && interval[1] > hsv[0]) {
                     int pixelGray = (int) pixelToGray(pixels[i]);
                     pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
                 }

@@ -22,8 +22,13 @@
     <string name="gallery">Charger une image</string>
     <string name="photo">Prendre une photo</string>
 
-    <string-array name="gauss_choices">
+    <string-array name="gaussChoices">
         <item>3</item>
         <item>5</item>
+    </string-array>
+
+    <string-array name="keepColorInterval">
+        <item>Extérieur de l\'intervalle créé par les deux valeurs choisies</item>
+        <item>Intérieur de l\'intervalle créé par les deux valeurs choisies</item>
     </string-array>
 </resources>

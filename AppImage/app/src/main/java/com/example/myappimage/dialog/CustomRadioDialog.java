@@ -39,8 +39,6 @@ public class CustomRadioDialog extends CustomDialog {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(customDialog.getTitle());
-        if (customDialog.getDescription() != null)
-            builder.setMessage(customDialog.getDescription());
 
         builder.setSingleChoiceItems(list, 0, new DialogInterface.OnClickListener() {
             @Override
