@@ -126,9 +126,9 @@ public class RenderscriptAlgorithm extends Algorithm {
     /**
      * Close the interval of pixels values using renderscript.
      *
-     * @param diminution the diminution asked by the user
+     * @param dimChoice the diminution asked by the user
      */
-    public void contrastDiminutionRS(int diminution) {
+    public void contrastDiminutionRS(int dimChoice) {
         Bitmap bitmap = getBitmap();
         RenderScript rs = RenderScript.create(context);
 
@@ -137,7 +137,7 @@ public class RenderscriptAlgorithm extends Algorithm {
 
         ScriptC_contrastDiminution contrastDiminutionScript = new ScriptC_contrastDiminution(rs);
 
-        contrastDiminutionScript.set_diminution(diminution);
+        contrastDiminutionScript.set_dimChoice(dimChoice);
 
         contrastDiminutionScript.forEach_minMax(input);
         contrastDiminutionScript.invoke_initNewMinMaxValues();

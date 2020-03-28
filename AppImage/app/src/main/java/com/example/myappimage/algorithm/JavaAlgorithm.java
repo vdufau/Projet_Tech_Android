@@ -199,9 +199,9 @@ public class JavaAlgorithm extends Algorithm {
     /**
      * Close the interval of pixels values.
      *
-     * @param diminution the diminution asked by the user
+     * @param dimChoice the diminution asked by the user
      */
-    public void contrastDiminution(int diminution) {
+    public void contrastDiminution(int dimChoice) {
         Bitmap bitmap = getBitmap();
         int size = 101;
         int[] LUTValue = new int[size];
@@ -221,9 +221,25 @@ public class JavaAlgorithm extends Algorithm {
                 minValue = (int) hsv[2];
         }
 
-        int maxValue2 = maxValue - diminution, minValue2 = minValue + diminution;
+        int maxValue2 = -1, minValue2 = -1;
+        switch (dimChoice) {
+            case 0:
+                maxValue2 = maxValue - 1;
+                minValue2 = minValue + 1;
+                break;
+            case 1:
+                maxValue2 = maxValue - (maxValue + minValue) / 4;
+                minValue2 = minValue + (maxValue + minValue) / 4;
+                break;
+            case 2:
+                maxValue2 = (maxValue + minValue) / 2 + 1;
+                minValue2 = (maxValue + minValue) / 2 - 1;
+                break;
+            default:
+                break;
+        }
 
-        if (maxValue2 > minValue2 && maxValue2 - minValue2 != 0) {
+        if (maxValue2 >= 0 && minValue2 >= 0 && maxValue2 > minValue2 && maxValue2 - minValue2 != 0) {
             for (int i = 0; i < size; i++) {
                 LUTValue[i] = (i - minValue) * (maxValue2 - minValue2) / (maxValue - minValue) + minValue2;
             }

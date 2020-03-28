@@ -116,6 +116,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        final String[] listInterval = getResources().getStringArray(R.array.keepColorInterval);
+        final String[] listContrast = getResources().getStringArray(R.array.contrastDim);
+        final String[] listGauss = getResources().getStringArray(R.array.gaussChoices);
         switch (item.getItemId()) {
             case R.id.gray:
 //                toGrayFirstVersion();
@@ -160,8 +163,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             @Override
                             public void onDismiss(DialogInterface dialog) {
                                 final int secondH = keepSecondColorDialog.getValue();
-                                final String[] list = getResources().getStringArray(R.array.keepColorInterval);
-                                final CustomRadioDialog intervalDialog = new CustomRadioDialog("Couleurs à garder \nValeurs choisies : " + h + " et " + secondH, null, context, list);
+                                final CustomRadioDialog intervalDialog = new CustomRadioDialog("Couleurs à garder \nValeurs choisies : " + h + " et " + secondH, null, context, listInterval);
                                 ((AlertDialog.Builder) intervalDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                                     @Override
                                     public void onDismiss(DialogInterface dialog) {
@@ -188,8 +190,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             @Override
                             public void onDismiss(DialogInterface dialog) {
                                 final int secondH = keepSecondColorRSDialog.getValue();
-                                final String[] list = getResources().getStringArray(R.array.keepColorInterval);
-                                final CustomRadioDialog intervalRSDialog = new CustomRadioDialog("Couleurs à garder \nValeurs choisies : " + h + " et " + secondH, null, context, list);
+                                final CustomRadioDialog intervalRSDialog = new CustomRadioDialog("Couleurs à garder \nValeurs choisies : " + h + " et " + secondH, null, context, listInterval);
                                 ((AlertDialog.Builder) intervalRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                                     @Override
                                     public void onDismiss(DialogInterface dialog) {
@@ -226,25 +227,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 rs.dynamicExpansionRS();
                 return true;
             case R.id.contrastDiminution:
-                final CustomInputDialog contrastDialog = new CustomInputDialog("Choix de la diminution", null, this);
+                final CustomRadioDialog contrastDialog = new CustomRadioDialog("Choix de la diminution", null, this, listContrast);
                 ((AlertDialog.Builder) contrastDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        int value = contrastDialog.getValue();
-                        if (value > 0)
-                            java.contrastDiminution(value);
+                        int choice = contrastDialog.getValue();
+                        if (choice >= 0)
+                            java.contrastDiminution(choice);
                     }
                 });
                 ((AlertDialog.Builder) contrastDialog.getBuilder()).show();
                 return true;
             case R.id.contrastDiminutionRS:
-                final CustomInputDialog constrastRSDialog = new CustomInputDialog("Choix de la diminution (RS)", null, this);
+                final CustomRadioDialog constrastRSDialog = new CustomRadioDialog("Choix de la diminution (RS)", null, this, listContrast);
                 ((AlertDialog.Builder) constrastRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        int value = constrastRSDialog.getValue();
-                        if (value > 0)
-                            rs.contrastDiminutionRS(value);
+                        int choice = constrastRSDialog.getValue();
+                        if (choice >= 0)
+                            rs.contrastDiminutionRS(choice);
                     }
                 });
                 ((AlertDialog.Builder) constrastRSDialog.getBuilder()).show();
@@ -273,14 +274,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
                 return true;
             case R.id.gaussConvolution:
-                final String[] list = getResources().getStringArray(R.array.gaussChoices);
-                final CustomRadioDialog gaussDialog = new CustomRadioDialog("Choix de la taille du filtre de Gauss", null, this, list);
+                final CustomRadioDialog gaussDialog = new CustomRadioDialog("Choix de la taille du filtre de Gauss", null, this, listGauss);
                 ((AlertDialog.Builder) gaussDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int value = gaussDialog.getValue();
                         if (value >= 0)
-                            java.gaussianFilterConvolution(Integer.parseInt(list[value]));
+                            java.gaussianFilterConvolution(Integer.parseInt(listGauss[value]));
                     }
                 });
                 ((AlertDialog.Builder) gaussDialog.getBuilder()).show();

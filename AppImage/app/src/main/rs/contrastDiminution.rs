@@ -1,7 +1,7 @@
 #pragma version(1)
 #pragma rs java_package_name(com.example.myappimage.algorithm)
 
-int diminution;
+int dimChoice;
 int32_t LUTValue[101];
 int maxValue;
 int minValue;
@@ -26,8 +26,16 @@ void RS_KERNEL minMax(uchar4 in) {
 }
 
 void initNewMinMaxValues() {
-    newMaxValue = maxValue - diminution;
-    newMinValue = minValue + diminution;
+    if (dimChoice == 0) {
+        newMaxValue = maxValue - 1;
+        newMinValue = minValue + 1;
+    } else if (dimChoice == 1) {
+        newMaxValue = maxValue - (maxValue + minValue) / 4;
+        newMinValue = minValue + (maxValue + minValue) / 4;
+    } else {
+        newMaxValue = (maxValue + minValue) / 2 + 1;
+        newMinValue = (maxValue + minValue) / 2 - 1;
+    }
 }
 
 void createLUTExpanded() {

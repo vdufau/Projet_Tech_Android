@@ -31,4 +31,10 @@
         <item>Extérieur de l\'intervalle créé par les deux valeurs choisies</item>
         <item>Intérieur de l\'intervalle créé par les deux valeurs choisies</item>
     </string-array>
+
+    <string-array name="contrastDim">
+        <item>Diminution minimale</item>
+        <item>Diminution moyenne</item>
+        <item>Diminution maximale</item>
+    </string-array>
 </resources>
