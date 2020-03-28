@@ -10,9 +10,6 @@ import android.graphics.Color;
  */
 public class PixelTransformation {
 
-    private PixelTransformation() {
-    }
-
     /**
      * Transform a pixel into a pixel which will be in gray scale.
      *
@@ -103,4 +100,5 @@ public class PixelTransformation {
         float m = v - c;
         return new float[]{(r + m) * 255, (g + m) * 255, (b + m) * 255};
     }
+    
 }

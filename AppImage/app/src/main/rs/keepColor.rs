@@ -1,5 +1,5 @@
 #pragma version(1)
-#pragma rs java_package_name(com.example.myappimage)
+#pragma rs java_package_name(com.example.myappimage.algorithm)
 
 static const float4 weight = {0.299f, 0.587f, 0.114f, 0.0f};
 int color;

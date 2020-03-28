@@ -1,5 +1,5 @@
 #pragma version(1)
-#pragma rs java_package_name(com.example.myappimage)
+#pragma rs java_package_name(com.example.myappimage.algorithm)
 
 int diminution;
 int32_t LUTValue[101];
