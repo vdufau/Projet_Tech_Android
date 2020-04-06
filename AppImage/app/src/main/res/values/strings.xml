@@ -34,7 +34,9 @@
 
     <string-array name="contrastDim">
         <item>Diminution minimale</item>
+        <item>Légère diminution</item>
         <item>Diminution moyenne</item>
-        <item>Diminution maximale</item>
+        <item>Grosse diminution</item>
+        <item>Diminution maximale (noir)</item>
     </string-array>
 </resources>

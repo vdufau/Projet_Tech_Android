@@ -12,11 +12,11 @@ import android.renderscript.RenderScript;
  * Link : https://github.com/vdufau/Projet_Tech_Android
  */
 public class RenderscriptAlgorithm extends Algorithm {
-    private Context context;
+    private RenderScript rs;
 
     public RenderscriptAlgorithm(Bitmap bitmap, Context context) {
         super(bitmap);
-        this.context = context;
+        rs = RenderScript.create(context);
     }
 
     /**
@@ -24,7 +24,6 @@ public class RenderscriptAlgorithm extends Algorithm {
      */
     public void toGrayRS() {
         Bitmap bitmap = getBitmap();
-        RenderScript rs = RenderScript.create(context);
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
@@ -38,7 +37,6 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         grayScript.destroy();
-        rs.destroy();
     }
 
     /**
@@ -48,7 +46,6 @@ public class RenderscriptAlgorithm extends Algorithm {
      */
     public void colorizeRS(int color) {
         Bitmap bitmap = getBitmap();
-        RenderScript rs = RenderScript.create(context);
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
@@ -64,7 +61,6 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         colorizeScript.destroy();
-        rs.destroy();
     }
 
     /**
@@ -77,8 +73,6 @@ public class RenderscriptAlgorithm extends Algorithm {
     public void keepColorRS(int h, int secondH, int inter) {
         Bitmap bitmap = getBitmap();
         int[] interval = keepColorInteval(h, secondH);
-
-        RenderScript rs = RenderScript.create(context);
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
@@ -96,7 +90,6 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         keepColorScript.destroy();
-        rs.destroy();
     }
 
     /**
@@ -104,7 +97,6 @@ public class RenderscriptAlgorithm extends Algorithm {
      */
     public void dynamicExpansionRS() {
         Bitmap bitmap = getBitmap();
-        RenderScript rs = RenderScript.create(context);
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
@@ -120,7 +112,6 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         dynamicExpansionScript.destroy();
-        rs.destroy();
     }
 
     /**
@@ -130,7 +121,6 @@ public class RenderscriptAlgorithm extends Algorithm {
      */
     public void contrastDiminutionRS(int dimChoice) {
         Bitmap bitmap = getBitmap();
-        RenderScript rs = RenderScript.create(context);
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
@@ -149,7 +139,6 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         contrastDiminutionScript.destroy();
-        rs.destroy();
     }
 
     /**
@@ -157,7 +146,6 @@ public class RenderscriptAlgorithm extends Algorithm {
      */
     public void histogramEqualizationRS() {
         Bitmap bitmap = getBitmap();
-        RenderScript rs = RenderScript.create(context);
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
@@ -175,6 +163,5 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         histEqScript.destroy();
-        rs.destroy();
     }
 }

@@ -221,27 +221,30 @@ public class JavaAlgorithm extends Algorithm {
                 minValue = (int) hsv[2];
         }
 
-        int maxValue2 = -1, minValue2 = -1;
+        int maxValue2 = -1;
         switch (dimChoice) {
             case 0:
                 maxValue2 = maxValue - 1;
-                minValue2 = minValue + 1;
                 break;
             case 1:
                 maxValue2 = maxValue - (maxValue + minValue) / 4;
-                minValue2 = minValue + (maxValue + minValue) / 4;
                 break;
             case 2:
-                maxValue2 = (maxValue + minValue) / 2 + 1;
-                minValue2 = (maxValue + minValue) / 2 - 1;
+                maxValue2 = maxValue - (maxValue + minValue) / 2;
+                break;
+            case 3:
+                maxValue2 = maxValue - (3 * (maxValue + minValue) / 4);
+                break;
+            case 4:
+                maxValue2 = minValue + 1;
                 break;
             default:
                 break;
         }
 
-        if (maxValue2 >= 0 && minValue2 >= 0 && maxValue2 > minValue2 && maxValue2 - minValue2 != 0) {
+        if (maxValue2 >= 0 && minValue >= 0 && maxValue2 > minValue && maxValue2 - minValue != 0) {
             for (int i = 0; i < size; i++) {
-                LUTValue[i] = (i - minValue) * (maxValue2 - minValue2) / (maxValue - minValue) + minValue2;
+                LUTValue[i] = (i - minValue) * (maxValue2 - minValue) / (maxValue - minValue) + minValue;
             }
 
             for (int i = 0; i < pixels.length; i++) {
