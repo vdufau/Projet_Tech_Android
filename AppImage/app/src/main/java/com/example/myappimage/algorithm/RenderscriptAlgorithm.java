@@ -21,8 +21,10 @@ public class RenderscriptAlgorithm extends Algorithm {
 
     /**
      * Transform the image in gray scale using renderscript.
+     *
+     * @return the new pixels
      */
-    public void toGrayRS() {
+    public int[] toGrayRS() {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -37,14 +39,16 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         grayScript.destroy();
+        return getPixels();
     }
 
     /**
      * Colorize the image using renderscript.
      *
      * @param color the color to apply to the image
+     * @return the new pixels
      */
-    public void colorizeRS(int color) {
+    public int[] colorizeRS(int color) {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -61,6 +65,7 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         colorizeScript.destroy();
+        return getPixels();
     }
 
     /**
@@ -69,8 +74,9 @@ public class RenderscriptAlgorithm extends Algorithm {
      * @param h       the first hue chosen by the user
      * @param secondH the second hue chosen by the user
      * @param inter   the parameter which determine if the colors to keep are between the two hues or not
+     * @return the new pixels
      */
-    public void keepColorRS(int h, int secondH, int inter) {
+    public int[] keepColorRS(int h, int secondH, int inter) {
         Bitmap bitmap = getBitmap();
         int[] interval = keepColorInteval(h, secondH);
 
@@ -90,12 +96,15 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         keepColorScript.destroy();
+        return getPixels();
     }
 
     /**
      * Extend the pixels values using renderscript.
+     *
+     * @return the new pixels
      */
-    public void dynamicExpansionRS() {
+    public int[] dynamicExpansionRS() {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -112,14 +121,16 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         dynamicExpansionScript.destroy();
+        return getPixels();
     }
 
     /**
      * Close the interval of pixels values using renderscript.
      *
      * @param dimChoice the diminution asked by the user
+     * @return the new pixels
      */
-    public void contrastDiminutionRS(int dimChoice) {
+    public int[] contrastDiminutionRS(int dimChoice) {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -139,12 +150,15 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         contrastDiminutionScript.destroy();
+        return getPixels();
     }
 
     /**
      * Equalize the pixels values using renderscript.
+     *
+     * @return the new pixels
      */
-    public void histogramEqualizationRS() {
+    public int[] histogramEqualizationRS() {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -163,5 +177,6 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         histEqScript.destroy();
+        return getPixels();
     }
 }

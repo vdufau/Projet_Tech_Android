@@ -1,35 +1,27 @@
 package com.example.myappimage;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.FloatMath;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.widget.Toast;
 
@@ -44,6 +36,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -55,9 +48,12 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
 
     private Context context = this;
-    private static TextView tv;
     private Button buttonHisto;
     private Button buttonSave;
+    private Button revert;
+    private Button invert;
+    private ArrayList<int[]> revertList;
+    private ArrayList<int[]> invertList;
     private static ImageView im;
     private Bitmap bitmap;
     private int[] initialPixels;
@@ -84,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      *
      * @param savedInstanceState the data to initialize if there is a save thanks to onSaveInstanceState (it will not be the case in this application)
      */
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,8 +89,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-//        tv = (TextView) findViewById(R.id.sizeImage);
         im = (ImageView) findViewById(R.id.imageView);
+        revertList = new ArrayList<int[]>();
+        invertList = new ArrayList<int[]>();
 
         initialization();
 
@@ -104,12 +102,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         buttonHisto.setOnClickListener(this);
         buttonSave = (Button) findViewById(R.id.saveImage);
         buttonSave.setOnClickListener(this);
+        revert = (Button) findViewById(R.id.revert);
+        revert.setOnClickListener(this);
+        invert = (Button) findViewById(R.id.invert);
+        invert.setOnClickListener(this);
+        refreshButton();
 
         im.setOnTouchListener(this);
-    }
-
-    public static ImageView getIm() {
-        return im;
     }
 
     /**
@@ -139,11 +138,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (item.getItemId()) {
             case R.id.gray:
 //                toGrayFirstVersion();
-                java.toGraySecondVersion();
+                revertList.add(java.toGraySecondVersion());
 //                toGrayThirdVersion();
+                refreshAction();
                 return true;
             case R.id.grayRS:
-                rs.toGrayRS();
+                revertList.add(rs.toGrayRS());
+                refreshAction();
                 return true;
             case R.id.colorize:
                 final CustomColorDialog colorizeDialog = new CustomColorDialog("Choix de la couleur", null, this);
@@ -151,8 +152,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int value = colorizeDialog.getValue();
-                        if (value >= 0)
-                            java.colorize(value);
+                        if (value >= 0) {
+                            revertList.add(java.colorize(value));
+                            refreshAction();
+                        }
                     }
                 });
                 ((ColorPickerDialog.Builder) colorizeDialog.getBuilder()).show();
@@ -163,8 +166,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int value = colorizeRSDialog.getValue();
-                        if (value >= 0)
-                            rs.colorizeRS(value);
+                        if (value >= 0) {
+                            revertList.add(rs.colorizeRS(value));
+                            refreshAction();
+                        }
                     }
                 });
                 ((ColorPickerDialog.Builder) colorizeRSDialog.getBuilder()).show();
@@ -185,7 +190,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     @Override
                                     public void onDismiss(DialogInterface dialog) {
                                         boolean inter = intervalDialog.getValue() == 1;
-                                        java.keepColor(h, secondH, inter);
+                                        revertList.add(java.keepColor(h, secondH, inter));
+                                        refreshAction();
                                     }
                                 });
                                 ((AlertDialog.Builder) intervalDialog.getBuilder()).show();
@@ -212,7 +218,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     @Override
                                     public void onDismiss(DialogInterface dialog) {
                                         int inter = intervalRSDialog.getValue();
-                                        rs.keepColorRS(h, secondH, inter);
+                                        revertList.add(rs.keepColorRS(h, secondH, inter));
+                                        refreshAction();
                                     }
                                 });
                                 ((AlertDialog.Builder) intervalRSDialog.getBuilder()).show();
@@ -231,17 +238,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         int value = brightnessDialog.getValue();
                         if (value <= 200 && value >= 0) {
                             bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-                            java.changeBitmapBrightness((float) value / 100f);
+                            revertList.add(java.changeBitmapBrightness((float) value / 100f));
+                            refreshAction();
                         }
                     }
                 });
                 ((AlertDialog.Builder) brightnessDialog.getBuilder()).show();
                 return true;
             case R.id.dynamicExpansion:
-                java.dynamicExpansion();
+                revertList.add(java.dynamicExpansion());
+                refreshAction();
                 return true;
             case R.id.dynamicExpansionRS:
-                rs.dynamicExpansionRS();
+                revertList.add(rs.dynamicExpansionRS());
+                refreshAction();
                 return true;
             case R.id.contrastDiminution:
                 final CustomRadioDialog contrastDialog = new CustomRadioDialog("Choix de la diminution", null, this, listContrast);
@@ -249,8 +259,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int choice = contrastDialog.getValue();
-                        if (choice >= 0)
-                            java.contrastDiminution(choice);
+                        if (choice >= 0) {
+                            revertList.add(java.contrastDiminution(choice));
+                            refreshAction();
+                        }
                     }
                 });
                 ((AlertDialog.Builder) contrastDialog.getBuilder()).show();
@@ -261,17 +273,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int choice = constrastRSDialog.getValue();
-                        if (choice >= 0)
-                            rs.contrastDiminutionRS(choice);
+                        if (choice >= 0) {
+                            revertList.add(rs.contrastDiminutionRS(choice));
+                            refreshAction();
+                        }
                     }
                 });
                 ((AlertDialog.Builder) constrastRSDialog.getBuilder()).show();
                 return true;
             case R.id.histogramEqualization:
-                java.histogramEqualization();
+                revertList.add(java.histogramEqualization());
+                refreshAction();
                 return true;
             case R.id.histogramEqualizationRS:
-                rs.histogramEqualizationRS();
+                revertList.add(rs.histogramEqualizationRS());
+                refreshAction();
                 return true;
             case R.id.averageFilter:
                 final CustomInputDialog averageDialog = new CustomInputDialog("Choix de la taille du noyau de convolution", "Le nombre rentré doit être impair", this);
@@ -279,9 +295,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int value = averageDialog.getValue();
-                        if (value > 0 && value % 2 == 1)
-                            java.averageFilterConvolution(value);
-                        else
+                        if (value > 0 && value % 2 == 1) {
+                            revertList.add(java.averageFilterConvolution(value));
+                            refreshAction();
+                        } else
                             Toast.makeText(context, "Nombre invalide", Toast.LENGTH_LONG).show();
                     }
                 });
@@ -296,23 +313,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int value = gaussDialog.getValue();
-                        if (value >= 0)
-                            java.gaussianFilterConvolution(Integer.parseInt(listGauss[value]));
+                        if (value >= 0) {
+                            revertList.add(java.gaussianFilterConvolution(Integer.parseInt(listGauss[value])));
+                            refreshAction();
+                        }
                     }
                 });
                 ((AlertDialog.Builder) gaussDialog.getBuilder()).show();
                 return true;
             case R.id.sobelConvolution:
-                java.sobelFilterConvolution();
+                revertList.add(java.sobelFilterConvolution());
+                refreshAction();
                 return true;
             case R.id.sobelConvolutionRS:
 //                sobelFilterConvolutionRS();
                 return true;
             case R.id.laplacienConvolution:
-                java.laplacienFilterConvolution();
+                revertList.add(java.laplacienFilterConvolution());
+                refreshAction();
                 return true;
             case R.id.reinitialization:
                 bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                revertList.clear();
+                invertList.clear();
+                revertList.add(initialPixels);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -333,6 +357,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.saveImage:
                 saveImage();
+                break;
+            case R.id.revert:
+                if (revertList.size() > 1) {
+                    invertList.add(revertList.get(revertList.size() - 1));
+                    revertList.remove(revertList.size() - 1);
+                    bitmap.setPixels(revertList.get(revertList.size() - 1), 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                }
+                refreshButton();
+                break;
+            case R.id.invert:
+                if (invertList.size() > 0) {
+                    revertList.add(invertList.get(invertList.size() - 1));
+                    invertList.remove(invertList.size() - 1);
+                    bitmap.setPixels(revertList.get(revertList.size() - 1), 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                }
+                refreshButton();
                 break;
         }
     }
@@ -398,7 +438,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return (float) Math.sqrt(x * x + y * y);
     }
 
-
     /**
      * Set a point to the center of the line created by the two fingers for a zoom event.
      *
@@ -441,6 +480,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         initialPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        revertList.add(initialPixels);
     }
 
     /**
@@ -479,6 +519,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(this, "Sauvegarde impossible", Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Refresh the revert and invert buttons if they are clicked.
+     */
+    private void refreshButton() {
+        revert.setEnabled(revertList.size() > 1 ? true : false);
+        invert.setEnabled(invertList.size() > 0 ? true : false);
+        revert.setVisibility(revertList.size() > 1 ? View.VISIBLE : View.INVISIBLE);
+        invert.setVisibility(invertList.size() > 0 ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    /**
+     * Refresh the revert and invert buttons when the user use an algorithm on the image.
+     */
+    private void refreshAction() {
+        revert.setEnabled(revertList.size() > 1 ? true : false);
+        revert.setVisibility(revertList.size() > 1 ? View.VISIBLE : View.INVISIBLE);
+        invertList.clear();
+        invert.setEnabled(false);
+        invert.setVisibility(View.INVISIBLE);
     }
 
 }

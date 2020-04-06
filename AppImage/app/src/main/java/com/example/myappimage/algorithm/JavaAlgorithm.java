@@ -24,10 +24,11 @@ public class JavaAlgorithm extends Algorithm {
     }
 
     /**
+     * @return the new pixels
      * @deprecated First version of image transformation to gray.
      * Worst version.
      */
-    public void toGrayFirstVersion() {
+    public int[] toGrayFirstVersion() {
         Bitmap bitmap = getBitmap();
         for (int i = 0; i < bitmap.getWidth(); i++) {
             for (int j = 0; j < bitmap.getHeight(); j++) {
@@ -37,13 +38,16 @@ public class JavaAlgorithm extends Algorithm {
                 bitmap.setPixel(i, j, newPixel);
             }
         }
+        return getPixels();
     }
 
     /**
      * Second version of image transformation to gray.
      * Better than the first.
+     *
+     * @return the new pixels
      */
-    public void toGraySecondVersion() {
+    public int[] toGraySecondVersion() {
         Bitmap bitmap = getBitmap();
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
@@ -52,6 +56,7 @@ public class JavaAlgorithm extends Algorithm {
             pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
         }
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
     }
 
     /**
@@ -69,8 +74,9 @@ public class JavaAlgorithm extends Algorithm {
      * Colorize the bitmap with a hue.
      *
      * @param color the hue chosen by the user
+     * @return the new pixels
      */
-    public void colorize(int color) {
+    public int[] colorize(int color) {
         Bitmap bitmap = getBitmap();
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
@@ -93,6 +99,7 @@ public class JavaAlgorithm extends Algorithm {
             pixels[i] = Color.argb(Color.alpha(pixels[i]), (int) rgb[0], (int) rgb[1], (int) rgb[2]);
         }
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
     }
 
     /**
@@ -101,8 +108,9 @@ public class JavaAlgorithm extends Algorithm {
      * @param h       the first hue chosen by the user
      * @param secondH the second hue chosen by the user
      * @param inter   the parameter which determine if the colors to keep are between the two hues or not
+     * @return the new pixels
      */
-    public void keepColor(int h, int secondH, boolean inter) {
+    public int[] keepColor(int h, int secondH, boolean inter) {
         Bitmap bitmap = getBitmap();
         int[] interval = keepColorInteval(h, secondH);
 
@@ -133,14 +141,16 @@ public class JavaAlgorithm extends Algorithm {
             }
         }
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
     }
 
     /**
      * Modifies the bitmap's brightness.
      *
      * @param value the brightness value chosen by the user (0-200)
+     * @return the new pixels
      */
-    public void changeBitmapBrightness(float value) {
+    public int[] changeBitmapBrightness(float value) {
         Bitmap bitmap = getBitmap();
         ColorMatrix cm = new ColorMatrix(new float[]
                 {
@@ -155,17 +165,19 @@ public class JavaAlgorithm extends Algorithm {
         Paint paint = new Paint();
         paint.setColorFilter(new ColorMatrixColorFilter(cm));
         canvas.drawBitmap(bitmap, 0, 0, paint);
+        return getPixels();
     }
 
     /**
      * Extend the pixels values if possible.
+     *
+     * @return the new pixels
      */
-    public void dynamicExpansion() {
+    public int[] dynamicExpansion() {
         Bitmap bitmap = getBitmap();
         int size = 101;
         int[] LUTValue = new int[size];
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        int[] pixels = getPixels();
         int maxValue = 0, minValue = 100;
 
         for (int i = 0; i < size; i++) {
@@ -194,19 +206,20 @@ public class JavaAlgorithm extends Algorithm {
 
             bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         }
+        return getPixels();
     }
 
     /**
      * Close the interval of pixels values.
      *
      * @param dimChoice the diminution asked by the user
+     * @return the new pixels
      */
-    public void contrastDiminution(int dimChoice) {
+    public int[] contrastDiminution(int dimChoice) {
         Bitmap bitmap = getBitmap();
         int size = 101;
         int[] LUTValue = new int[size];
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        int[] pixels = getPixels();
         int maxValue = 0, minValue = 100;
 
         for (int i = 0; i < size; i++) {
@@ -256,17 +269,19 @@ public class JavaAlgorithm extends Algorithm {
 
             bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         }
+        return getPixels();
     }
 
     /**
      * Equalize the pixels values.
+     *
+     * @return the new pixels
      */
-    public void histogramEqualization() {
+    public int[] histogramEqualization() {
         Bitmap bitmap = getBitmap();
         int size = 101;
         int[] histV = new int[size];
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        int[] pixels = getPixels();
         for (int i = 0; i < size; i++) {
             histV[i] = 0;
         }
@@ -289,6 +304,7 @@ public class JavaAlgorithm extends Algorithm {
         }
 
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
     }
 
     /**
@@ -296,21 +312,25 @@ public class JavaAlgorithm extends Algorithm {
      * It will blur the image.
      *
      * @param size the size of the kernel
+     * @return the new pixels
      */
-    public void averageFilterConvolution(int size) {
+    public int[] averageFilterConvolution(int size) {
         Bitmap bitmap = getBitmap();
         ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(size);
         double moy = 1.0 / (size * size);
         convolutionMatrix.setMatrix(moy);
         int[] pixels = convolutionMatrix.applyConvolution(bitmap);
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
     }
 
     /**
      * Apply a Gaussian filter on the image.
      * It will blur the image.
+     *
+     * @return the new pixels
      */
-    public void gaussianFilterConvolution(int size) {
+    public int[] gaussianFilterConvolution(int size) {
         Bitmap bitmap = getBitmap();
         double[][] gauss;
         if (size == 3) {
@@ -345,13 +365,16 @@ public class JavaAlgorithm extends Algorithm {
         convolutionMatrix.setMatrix(gauss);
         int[] pixels = convolutionMatrix.applyConvolution(bitmap);
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
     }
 
     /**
      * Apply a Sobel filter on the image.
      * It will mark the image outlines.
+     *
+     * @return the new pixels
      */
-    public void sobelFilterConvolution() {
+    public int[] sobelFilterConvolution() {
         toGraySecondVersion();
         Bitmap bitmap = getBitmap();
 
@@ -366,8 +389,7 @@ public class JavaAlgorithm extends Algorithm {
                 {1, 2, 1}
         };
 
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        int[] pixels = getPixels();
 
         ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(3);
 
@@ -386,13 +408,16 @@ public class JavaAlgorithm extends Algorithm {
         }
 
         bitmap.setPixels(sobelPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
     }
 
     /**
      * Apply a Laplacien filter on the image.
      * It will mark the image outlines.
+     *
+     * @return the new pixels
      */
-    public void laplacienFilterConvolution() {
+    public int[] laplacienFilterConvolution() {
         toGraySecondVersion();
         Bitmap bitmap = getBitmap();
 
@@ -402,8 +427,7 @@ public class JavaAlgorithm extends Algorithm {
                 {1, 1, 1}
         };
 
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        int[] pixels = getPixels();
 
         ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(3);
         convolutionMatrix.setMatrix(laplacien);
@@ -417,5 +441,6 @@ public class JavaAlgorithm extends Algorithm {
             laplacienPixels[i] = Color.argb(Color.alpha(pixels[i]), newPixel, newPixel, newPixel);
         }
         bitmap.setPixels(laplacienPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
     }
 }
