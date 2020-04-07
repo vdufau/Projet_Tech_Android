@@ -1,6 +1,7 @@
 package com.example.myappimage;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -39,6 +40,7 @@ public class LoadActivity extends AppCompatActivity implements View.OnClickListe
     private Button photoButton;
     private Uri image_uri;
 
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

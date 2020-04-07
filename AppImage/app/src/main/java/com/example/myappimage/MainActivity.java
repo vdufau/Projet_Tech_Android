@@ -8,11 +8,15 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.graphics.PointF;
+import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -22,6 +26,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.widget.Toast;
 
@@ -60,8 +65,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private JavaAlgorithm java;
     private RenderscriptAlgorithm rs;
 
-    private Matrix matrix = new Matrix();
-    private Matrix savedMatrix = new Matrix();
+    private Matrix matrix;
+    private Matrix savedMatrix;
 
     private static final int NONE = 0;
     private static final int DRAG = 1;
@@ -335,8 +340,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.reinitialization:
                 bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
                 revertList.clear();
-                invertList.clear();
                 revertList.add(initialPixels);
+                refreshAction();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -481,6 +486,69 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initialPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         revertList.add(initialPixels);
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) im.getLayoutParams();
+        float width = (float) size.x - lp.rightMargin - lp.leftMargin;
+        float height = (float) size.y - lp.bottomMargin - lp.topMargin;
+        float scaleW = width / bitmap.getWidth();
+        float scaleH = height / bitmap.getHeight();
+        matrix = im.getImageMatrix();
+        savedMatrix = im.getImageMatrix();
+        float scale = scaleW > scaleH ? scaleH : scaleW;
+        matrix.setScale(scale, scale);
+        savedMatrix.setScale(scale, scale);
+
+        Log.i("aya", "" + scaleW + " " + scaleH + " " + scale + " " + getBitmapPositionInsideImageView(im));
+    }
+
+    /**
+     * Returns the bitmap position inside an imageView.
+     * @param imageView source ImageView
+     * @return 0: left, 1: top, 2: width, 3: height
+     */
+    public static int[] getBitmapPositionInsideImageView(ImageView imageView) {
+        int[] ret = new int[4];
+
+        if (imageView == null || imageView.getDrawable() == null)
+            return ret;
+
+        // Get image dimensions
+        // Get image matrix values and place them in an array
+        float[] f = new float[9];
+        imageView.getImageMatrix().getValues(f);
+
+        // Extract the scale values using the constants (if aspect ratio maintained, scaleX == scaleY)
+        final float scaleX = f[Matrix.MSCALE_X];
+        final float scaleY = f[Matrix.MSCALE_Y];
+
+        // Get the drawable (could also get the bitmap behind the drawable and getWidth/getHeight)
+        final Drawable d = imageView.getDrawable();
+        final int origW = d.getIntrinsicWidth();
+        final int origH = d.getIntrinsicHeight();
+
+        // Calculate the actual dimensions
+        final int actW = Math.round(origW * scaleX);
+        final int actH = Math.round(origH * scaleY);
+
+        ret[2] = actW;
+        ret[3] = actH;
+
+        // Get image position
+        // We assume that the image is centered into ImageView
+        int imgViewW = imageView.getWidth();
+        int imgViewH = imageView.getHeight();
+
+        int top = (int) (imgViewH - actH)/2;
+        int left = (int) (imgViewW - actW)/2;
+        Log.i("aya", "" + top + " " + left + " " + actW + " " + actH);
+
+        ret[0] = left;
+        ret[1] = top;
+
+        return ret;
     }
 
     /**
