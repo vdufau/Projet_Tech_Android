@@ -9,6 +9,8 @@ import android.graphics.Paint;
 
 import com.example.myappimage.ConvolutionMatrix;
 
+import java.util.Random;
+
 import static com.example.myappimage.PixelTransformation.*;
 
 /**
@@ -468,6 +470,24 @@ public class JavaAlgorithm extends Algorithm {
             if (blue > 255) blue = 255;
             if (blue < 0) blue = 0;
             pixels[i] = Color.argb(Color.alpha(pixels[i]), red, green, blue);
+        }
+        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
+    }
+
+    /**
+     * Apply a snow effect to the bitmap.
+     *
+     * @return the new pixels
+     */
+    public int[] snowEffect() {
+        Bitmap bitmap = getBitmap();
+        Random random = new Random();
+        int[] pixels = getPixels();
+        for (int i = 0; i < pixels.length; i++) {
+            int r = random.nextInt(255);
+            if (Color.red(pixels[i]) > r && Color.green(pixels[i]) > r && Color.blue(pixels[i]) > r)
+                pixels[i] = Color.argb(Color.alpha(pixels[i]), 255, 255, 255);
         }
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         return getPixels();
