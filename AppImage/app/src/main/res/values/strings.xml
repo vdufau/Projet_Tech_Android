@@ -3,6 +3,7 @@
     <string name="javaFunctions">Version Java</string>
     <string name="renderscriptFunctions">Version Renderscript</string>
     <string name="gray">Niveaux de gris</string>
+    <string name="invert">Inversion des couleurs</string>
     <string name="colorize">Colorisation</string>
     <string name="keepColor">Conservation</string>
     <string name="brightness">Modifier luminosité</string>
@@ -16,6 +17,8 @@
     <string name="gaussConvolution">Filtre Gaussien</string>
     <string name="sobelConvolution">Filtre de Sobel</string>
     <string name="laplacienConvolution">Filtre Laplacien</string>
+    <string name="pencilEffect">Effet crayonné</string>
+    <string name="pencilColorEffect">Effet crayonné (couleur)</string>
     <string name="validate">OK</string>
     <string name="cancel">ANNULER</string>
     <string name="saveImage">Sauvegarder l\'image</string>
@@ -38,5 +41,11 @@
         <item>Diminution moyenne</item>
         <item>Grosse diminution</item>
         <item>Diminution maximale (noir)</item>
+    </string-array>
+
+    <string-array name="graySketch">
+        <item>Minimum</item>
+        <item>Moyen</item>
+        <item>Élevé</item>
     </string-array>
 </resources>

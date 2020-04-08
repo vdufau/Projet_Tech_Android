@@ -43,6 +43,29 @@ public class RenderscriptAlgorithm extends Algorithm {
     }
 
     /**
+     * Invert all bitmap pixels.
+     *
+     * @return the new pixels
+     */
+    public int[] invertRS() {
+        Bitmap bitmap = getBitmap();
+
+        Allocation input = Allocation.createFromBitmap(rs, bitmap);
+        Allocation output = Allocation.createTyped(rs, input.getType());
+
+        ScriptC_invert invertScript = new ScriptC_invert(rs);
+
+        invertScript.forEach_invert(input, output);
+
+        output.copyTo(bitmap);
+
+        input.destroy();
+        output.destroy();
+        invertScript.destroy();
+        return getPixels();
+    }
+
+    /**
      * Colorize the image using renderscript.
      *
      * @param color the color to apply to the image

@@ -25,6 +25,12 @@ public abstract class Algorithm {
         return pixels;
     }
 
+    public int[] getPixels(Bitmap bitmap) {
+        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return pixels;
+    }
+
     /**
      * Calculate the correct interval for the keepColor algorithm.
      *

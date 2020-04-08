@@ -8,6 +8,9 @@
                 android:id="@+id/gray"
                 android:title="@string/gray" />
             <item
+                android:id="@+id/invert"
+                android:title="@string/invert" />
+            <item
                 android:id="@+id/colorize"
                 android:title="@string/colorize" />
             <item
@@ -37,6 +40,12 @@
             <item
                 android:id="@+id/laplacienConvolution"
                 android:title="@string/laplacienConvolution" />
+            <item
+                android:id="@+id/pencilEffect"
+                android:title="@string/pencilEffect" />
+            <item
+                android:id="@+id/pencilColorEffect"
+                android:title="@string/pencilColorEffect" />
         </menu>
     </item>
     <item
@@ -46,6 +55,9 @@
             <item
                 android:id="@+id/grayRS"
                 android:title="@string/gray" />
+            <item
+                android:id="@+id/invertRS"
+                android:title="@string/invert" />
             <item
                 android:id="@+id/colorizeRS"
                 android:title="@string/colorize" />
