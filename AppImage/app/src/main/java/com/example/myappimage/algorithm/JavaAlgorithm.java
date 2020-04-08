@@ -443,4 +443,34 @@ public class JavaAlgorithm extends Algorithm {
         bitmap.setPixels(laplacienPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         return getPixels();
     }
+
+    /**
+     * Apply a cartoon effect to the bitmap.
+     *
+     * @return the new pixels
+     */
+    public int[] cartoonEffect() {
+        Bitmap bitmap = getBitmap();
+        averageFilterConvolution(5);
+        int[] pixels = getPixels();
+        for (int i = 0; i < pixels.length; i++) {
+            int pixel = pixels[i];
+            int red = Color.red(pixel);
+            int green = Color.green(pixel);
+            int blue = Color.blue(pixel);
+            red = (red - (red % 64));
+            green = (green - (green % 64));
+            blue = (blue - (blue % 64));
+            if (red > 255) red = 255;
+            if (red < 0) red = 0;
+            if (green > 255) green = 255;
+            if (green < 0) green = 0;
+            if (blue > 255) blue = 255;
+            if (blue < 0) blue = 0;
+            pixels[i] = Color.argb(Color.alpha(pixels[i]), red, green, blue);
+        }
+        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
+    }
+
 }

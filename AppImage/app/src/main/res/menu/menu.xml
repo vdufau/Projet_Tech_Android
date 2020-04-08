@@ -37,6 +37,9 @@
             <item
                 android:id="@+id/laplacienConvolution"
                 android:title="@string/laplacienConvolution" />
+            <item
+                android:id="@+id/cartoonEffect"
+                android:title="@string/cartoonEffect" />
         </menu>
     </item>
     <item
