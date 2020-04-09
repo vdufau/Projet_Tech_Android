@@ -19,6 +19,8 @@
     <string name="laplacienConvolution">Filtre Laplacien</string>
     <string name="pencilEffect">Effet crayonné</string>
     <string name="pencilColorEffect">Effet crayonné (couleur)</string>
+    <string name="cartoonEffect">Effet cartoon</string>
+    <string name="snowEffect">Effet de neige</string>
     <string name="validate">OK</string>
     <string name="cancel">ANNULER</string>
     <string name="saveImage">Sauvegarder l\'image</string>

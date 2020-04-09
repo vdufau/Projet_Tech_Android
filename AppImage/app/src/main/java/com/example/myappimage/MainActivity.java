@@ -364,6 +364,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 revertList.add(java.sketchColorEffect());
                 refreshAction();
                 return true;
+            case R.id.cartoonEffect:
+                revertList.add(java.cartoonEffect());
+                refreshAction();
+                return true;
+            case R.id.snowEffect:
+                revertList.add(java.snowEffect());
+                refreshAction();
+                return true;
             case R.id.reinitialization:
                 bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
                 revertList.clear();

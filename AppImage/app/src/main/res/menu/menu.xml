@@ -46,6 +46,12 @@
             <item
                 android:id="@+id/pencilColorEffect"
                 android:title="@string/pencilColorEffect" />
+            <item
+                android:id="@+id/cartoonEffect"
+                android:title="@string/cartoonEffect" />
+            <item
+                android:id="@+id/snowEffect"
+                android:title="@string/snowEffect" />
         </menu>
     </item>
     <item
