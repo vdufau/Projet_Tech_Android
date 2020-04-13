@@ -43,6 +43,9 @@
             <item
                 android:id="@+id/snowEffect"
                 android:title="@string/snowEffect" />
+            <item
+                android:id="@+id/imageIncrustation"
+                android:title="imageIncrustaion" />
         </menu>
     </item>
     <item
