@@ -18,6 +18,7 @@
     <string name="laplacienConvolution">Filtre Laplacien</string>
     <string name="cartoonEffect">Effet cartoon</string>
     <string name="snowEffect">Effet de neige</string>
+    <string name="incrustation">Incrustation d\'objets</string>
     <string name="validate">OK</string>
     <string name="cancel">ANNULER</string>
     <string name="saveImage">Sauvegarder l\'image</string>

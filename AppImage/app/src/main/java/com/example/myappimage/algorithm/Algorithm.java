@@ -1,5 +1,6 @@
 package com.example.myappimage.algorithm;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
 /**
@@ -10,16 +11,28 @@ import android.graphics.Bitmap;
  */
 public abstract class Algorithm {
     private Bitmap bitmap;
+    private Context context;
 
-    public Algorithm(Bitmap bitmap) {
+    public Algorithm(Bitmap bitmap, Context context) {
         this.bitmap = bitmap;
+        this.context = context;
     }
 
     public Bitmap getBitmap() {
         return bitmap;
     }
 
+    public Context getContext() {
+        return context;
+    }
+
     public int[] getPixels() {
+        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return pixels;
+    }
+
+    public int[] getPixels(Bitmap bitmap) {
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         return pixels;

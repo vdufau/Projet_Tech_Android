@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         initialization();
 
-        java = new JavaAlgorithm(bitmap);
+        java = new JavaAlgorithm(bitmap, context);
         rs = new RenderscriptAlgorithm(bitmap, context);
 
         buttonHisto = (Button) findViewById(R.id.buttonHisto);
@@ -343,6 +343,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return true;
             case R.id.snowEffect:
                 revertList.add(java.snowEffect());
+                refreshAction();
+                return true;
+            case R.id.imageIncrustation:
+                revertList.add(java.objectIncrustation());
                 refreshAction();
                 return true;
             case R.id.reinitialization:
