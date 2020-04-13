@@ -7,17 +7,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
-import android.media.FaceDetector;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -83,8 +77,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private PointF mid = new PointF();
     private float oldDist = 1f;
 
-
-
     /**
      * Initialization of the application.
      * Initialization of the main layout.
@@ -102,15 +94,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-
-        context = getApplicationContext();
         im = (ImageView) findViewById(R.id.imageView);
         revertList = new ArrayList<int[]>();
         invertList = new ArrayList<int[]>();
 
         initialization();
 
-        java = new JavaAlgorithm(bitmap,context);
+        java = new JavaAlgorithm(bitmap);
         rs = new RenderscriptAlgorithm(bitmap, context);
 
         buttonHisto = (Button) findViewById(R.id.buttonHisto);
@@ -121,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         revert.setOnClickListener(this);
         invert = (Button) findViewById(R.id.invert);
         invert.setOnClickListener(this);
-
         refreshButton();
 
         im.setOnTouchListener(this);
@@ -360,11 +349,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
                 revertList.clear();
                 revertList.add(initialPixels);
-                refreshAction();
-                return true;
-            case R.id.imageIncrustation:
-                //revertList.add(java.detectFace(im));
-                java.detectFace(im);
                 refreshAction();
                 return true;
             default:
@@ -633,7 +617,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         invert.setEnabled(false);
         invert.setVisibility(View.INVISIBLE);
     }
-
-
 
 }

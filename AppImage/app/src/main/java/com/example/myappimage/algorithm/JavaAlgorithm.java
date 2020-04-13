@@ -1,31 +1,13 @@
 package com.example.myappimage.algorithm;
 
-import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
-
-import android.media.AudioManager;
-import android.os.Bundle;
-import android.util.Log;
-import android.util.SparseArray;
-import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.example.myappimage.ConvolutionMatrix;
-import com.example.myappimage.MainActivity;
-import com.example.myappimage.R;
-
-import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.face.Face;
-import com.google.android.gms.vision.face.FaceDetector;
-import com.google.android.gms.vision.face.Landmark;
 
 import java.util.Random;
 
@@ -38,19 +20,16 @@ import static com.example.myappimage.PixelTransformation.*;
  * Link : https://github.com/vdufau/Projet_Tech_Android
  */
 public class JavaAlgorithm extends Algorithm {
-    Bitmap nose;
-    Bitmap right_eye;
-    Bitmap left_eye;
-    Context context;
-    public JavaAlgorithm(Bitmap bitmap ,Context context) {
-        super(bitmap,context);
+
+    public JavaAlgorithm(Bitmap bitmap) {
+        super(bitmap);
     }
 
-        /**
-         * @return the new pixels
-         * @deprecated First version of image transformation to gray.
-         * Worst version.
-         */
+    /**
+     * @return the new pixels
+     * @deprecated First version of image transformation to gray.
+     * Worst version.
+     */
     public int[] toGrayFirstVersion() {
         Bitmap bitmap = getBitmap();
         for (int i = 0; i < bitmap.getWidth(); i++) {
@@ -91,73 +70,6 @@ public class JavaAlgorithm extends Algorithm {
         m.setSaturation(0);
         ColorMatrixColorFilter filter = new ColorMatrixColorFilter(m);
 //        im.setColorFilter(filter);
-    }
-
-
-
-    public ImageView detectFace(ImageView im){
-        ImageView result = im;
-        Bitmap bitmap = getBitmap();
-        Context context = getContext();
-        nose = BitmapFactory.decodeResource(context.getApplicationContext().getResources(), R.drawable.clown_nose1);
-        right_eye = BitmapFactory.decodeResource(context.getApplicationContext().getResources(),R.drawable.right_eye);
-        left_eye = BitmapFactory.decodeResource(context.getApplicationContext().getResources(),R.drawable.left_eye);
-
-        //Create image
-        Bitmap tempBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas tempCanvas = new Canvas(tempBitmap);
-        tempCanvas.drawBitmap(bitmap, 0, 0, null);
-
-        //Detect the Faces
-        FaceDetector faceDetector =
-                new FaceDetector.Builder(context.getApplicationContext())
-                        .setTrackingEnabled(false)
-                        .setLandmarkType(FaceDetector.ALL_LANDMARKS)
-                        .build();
-
-        Frame frame = new Frame.Builder().setBitmap(bitmap).build();
-        SparseArray<Face> faces = faceDetector.detect(frame);
-
-
-        for(int i=0; i<faces.size(); i++) {
-            Face thisFace = faces.valueAt(i);
-
-            // Scale objects
-            nose = Bitmap.createScaledBitmap(nose,  (int)thisFace.getWidth()/4,(int)thisFace.getWidth()/4,false);
-            right_eye = Bitmap.createScaledBitmap(right_eye,(int)thisFace.getWidth()/4,(int)thisFace.getWidth()/4,false);
-            left_eye = Bitmap.createScaledBitmap(left_eye,(int)thisFace.getWidth()/4,(int)thisFace.getWidth()/4,false);
-
-            for(Landmark landmark:thisFace.getLandmarks()) {
-                int cx = (int) (landmark.getPosition().x);
-                int cy = (int) (landmark.getPosition().y);
-
-                if(landmark.getType()==Landmark.NOSE_BASE){
-                    int scaleWidth = nose.getScaledWidth(tempCanvas);
-                    int scaleHeight = nose.getScaledHeight(tempCanvas);
-                    //tempCanvas.drawBitmap(glass, scaleWidth,scaleHeight - y1,null);//130 140
-                    // Add Glasses
-                    tempCanvas.drawBitmap(nose, cx-(scaleWidth/2),cy - scaleHeight + scaleHeight/4,null);
-                }
-                if(landmark.getType()==Landmark.RIGHT_EYE){
-                    int scaleWidth = right_eye.getScaledWidth(tempCanvas);
-                    int scaleHeight = right_eye.getScaledHeight(tempCanvas);
-                    // Add right eye
-                    tempCanvas.drawBitmap(right_eye, cx-(scaleWidth/2),cy - scaleHeight + scaleHeight/4,null);
-                }
-                if(landmark.getType()==Landmark.LEFT_EYE){
-                    int scaleWidth = left_eye.getScaledWidth(tempCanvas);
-                    int scaleHeight = left_eye.getScaledHeight(tempCanvas);
-                    // Add left eye
-                    tempCanvas.drawBitmap(left_eye, cx-(scaleWidth/2),cy - scaleHeight + scaleHeight/4,null);
-                }
-
-
-            }
-
-        }
-
-        result.setImageDrawable(new BitmapDrawable(context.getResources(),tempBitmap));
-        return result;
     }
 
     /**
