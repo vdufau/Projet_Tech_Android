@@ -15,7 +15,7 @@ public class RenderscriptAlgorithm extends Algorithm {
     private RenderScript rs;
 
     public RenderscriptAlgorithm(Bitmap bitmap, Context context) {
-        super(bitmap);
+        super(bitmap, context);
         rs = RenderScript.create(context);
     }
 
