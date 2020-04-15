@@ -78,6 +78,9 @@
                 android:id="@+id/sobelConvolutionRS"
                 android:title="@string/sobelConvolution"
                 android:enabled="false"/>
+            <item
+                android:id="@+id/snowEffectRS"
+                android:title="@string/snowEffect" />
         </menu>
     </item>
     <item

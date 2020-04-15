@@ -345,6 +345,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 revertList.add(java.snowEffect());
                 refreshAction();
                 return true;
+            case R.id.snowEffectRS:
+                revertList.add(rs.snowEffect());
+                refreshAction();
+                return true;
             case R.id.imageIncrustation:
                 revertList.add(java.objectIncrustation());
                 refreshAction();

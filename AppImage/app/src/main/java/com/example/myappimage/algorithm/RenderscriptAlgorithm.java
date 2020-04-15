@@ -179,4 +179,27 @@ public class RenderscriptAlgorithm extends Algorithm {
         histEqScript.destroy();
         return getPixels();
     }
+
+    /**
+     * Apply a snow effect.
+     *
+     * @return the new pixels
+     */
+    public int[] snowEffect() {
+        Bitmap bitmap = getBitmap();
+
+        Allocation input = Allocation.createFromBitmap(rs, bitmap);
+        Allocation output = Allocation.createTyped(rs, input.getType());
+
+        ScriptC_snow snowScript = new ScriptC_snow(rs);
+
+        snowScript.forEach_randomSnow(input, output);
+
+        output.copyTo(bitmap);
+
+        input.destroy();
+        output.destroy();
+        snowScript.destroy();
+        return getPixels();
+    }
 }
