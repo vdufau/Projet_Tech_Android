@@ -1,5 +1,6 @@
 package com.example.myappimage;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -19,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
  * HistogramActivity Class
  *
  * @author Dufau Vincent
- * Link : https://github.com/vdufau/Projet_Tech_L3
+ * Link : https://github.com/vdufau/Projet_Tech_Android
  */
 public class HistogramActivity extends AppCompatActivity {
 
@@ -33,10 +34,12 @@ public class HistogramActivity extends AppCompatActivity {
      *
      * @param savedInstanceState the data to initialize if there is a save thanks to onSaveInstanceState (it will not be the case in this application)
      */
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_histogram);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 

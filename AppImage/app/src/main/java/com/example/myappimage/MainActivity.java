@@ -1,41 +1,39 @@
 package com.example.myappimage;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
+import android.graphics.Point;
+import android.graphics.PointF;
+import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.renderscript.Allocation;
-import android.renderscript.RenderScript;
-import android.text.InputType;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.graphics.Color;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+
 import android.widget.Toast;
 
+import com.example.myappimage.algorithm.JavaAlgorithm;
+import com.example.myappimage.algorithm.RenderscriptAlgorithm;
+import com.example.myappimage.dialog.*;
 import com.skydoves.colorpickerview.ColorPickerDialog;
-import com.skydoves.colorpickerview.listeners.ColorListener;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,29 +41,41 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-
-// TODO fragment a la place d'activité
-// TODO rerotate pour res
 
 /**
  * MainActivity Class
  *
  * @author Dufau Vincent
- * Link : https://github.com/vdufau/Projet_Tech_L3
+ * Link : https://github.com/vdufau/Projet_Tech_Android
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
 
     private Context context = this;
-    private static TextView tv;
     private Button buttonHisto;
     private Button buttonSave;
+    private Button revert;
+    private Button invert;
+    private ArrayList<int[]> revertList;
+    private ArrayList<int[]> invertList;
     private static ImageView im;
     private Bitmap bitmap;
     private int[] initialPixels;
-    private ScaleGestureDetector SGD;
-    private float mx, my, curX, curY;
-    private LoadingDialog loadingDialog;
+    private JavaAlgorithm java;
+    private RenderscriptAlgorithm rs;
+
+    private Matrix matrix;
+    private Matrix savedMatrix;
+
+    private static final int NONE = 0;
+    private static final int DRAG = 1;
+    private static final int ZOOM = 2;
+    private int mode = NONE;
+
+    private PointF start = new PointF();
+    private PointF mid = new PointF();
+    private float oldDist = 1f;
 
     /**
      * Initialization of the application.
@@ -75,30 +85,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      *
      * @param savedInstanceState the data to initialize if there is a save thanks to onSaveInstanceState (it will not be the case in this application)
      */
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        tv = (TextView) findViewById(R.id.sizeImage);
         im = (ImageView) findViewById(R.id.imageView);
+        revertList = new ArrayList<int[]>();
+        invertList = new ArrayList<int[]>();
 
         initialization();
 
-        loadingDialog = new LoadingDialog(MainActivity.this);
+        java = new JavaAlgorithm(bitmap, context);
+        rs = new RenderscriptAlgorithm(bitmap, context);
 
         buttonHisto = (Button) findViewById(R.id.buttonHisto);
         buttonHisto.setOnClickListener(this);
         buttonSave = (Button) findViewById(R.id.saveImage);
         buttonSave.setOnClickListener(this);
+        revert = (Button) findViewById(R.id.revert);
+        revert.setOnClickListener(this);
+        invert = (Button) findViewById(R.id.invert);
+        invert.setOnClickListener(this);
+        refreshButton();
 
-        SGD = new ScaleGestureDetector(this, new ScaleListener());
-    }
-
-    public static ImageView getIm() {
-        return im;
+        im.setOnTouchListener(this);
     }
 
     /**
@@ -111,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     /**
@@ -122,65 +137,269 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        final String[] listInterval = getResources().getStringArray(R.array.keepColorInterval);
+        final String[] listContrast = getResources().getStringArray(R.array.contrastDim);
+        final String[] listGauss = getResources().getStringArray(R.array.gaussChoices);
         switch (item.getItemId()) {
             case R.id.gray:
 //                toGrayFirstVersion();
-                toGraySecondVersion();
+                revertList.add(java.toGray());
 //                toGrayThirdVersion();
+                refreshAction();
                 return true;
             case R.id.grayRS:
-                toGrayRS();
+                revertList.add(rs.toGray());
+                refreshAction();
                 return true;
             case R.id.colorize:
-                colorDialog(AlgorithmVersion.JAVA, AlgorithmType.COLORIZE);
+                final CustomColorDialog colorizeDialog = new CustomColorDialog("Choix de la couleur", null, this);
+                ((ColorPickerDialog.Builder) colorizeDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = colorizeDialog.getValue();
+                        if (value >= 0) {
+                            revertList.add(java.colorize(value));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((ColorPickerDialog.Builder) colorizeDialog.getBuilder()).show();
                 return true;
             case R.id.colorizeRS:
-                colorDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.COLORIZE);
+                final CustomColorDialog colorizeRSDialog = new CustomColorDialog("Choix de la couleur (RS)", null, this);
+                ((ColorPickerDialog.Builder) colorizeRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = colorizeRSDialog.getValue();
+                        if (value >= 0) {
+                            revertList.add(rs.colorize(value));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((ColorPickerDialog.Builder) colorizeRSDialog.getBuilder()).show();
                 return true;
             case R.id.keepColor:
-                colorDialog(AlgorithmVersion.JAVA, AlgorithmType.KEEP_COLOR);
+                final CustomColorDialog keepColorDialog = new CustomColorDialog("Choix des couleurs", "Première couleur de l'intervalle", this);
+                ((ColorPickerDialog.Builder) keepColorDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        final int h = keepColorDialog.getValue();
+                        final CustomColorDialog keepSecondColorDialog = new CustomColorDialog("Choix des couleurs", "Seconde couleur de l'intervalle", context);
+                        ((ColorPickerDialog.Builder) keepSecondColorDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialog) {
+                                final int secondH = keepSecondColorDialog.getValue();
+                                final CustomRadioDialog intervalDialog = new CustomRadioDialog("Couleurs à garder \nValeurs choisies : " + h + " et " + secondH, null, context, listInterval);
+                                ((AlertDialog.Builder) intervalDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                    @Override
+                                    public void onDismiss(DialogInterface dialog) {
+                                        boolean inter = intervalDialog.getValue() == 1;
+                                        revertList.add(java.keepColor(h, secondH, inter));
+                                        refreshAction();
+                                    }
+                                });
+                                ((AlertDialog.Builder) intervalDialog.getBuilder()).show();
+                            }
+                        });
+                        ((ColorPickerDialog.Builder) keepSecondColorDialog.getBuilder()).show();
+                    }
+                });
+                ((ColorPickerDialog.Builder) keepColorDialog.getBuilder()).show();
                 return true;
             case R.id.keepColorRS:
-                colorDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.KEEP_COLOR);
+                final CustomColorDialog keepColorRSDialog = new CustomColorDialog("Choix des couleurs (RS)", "Première couleur de l'intervalle", this);
+                ((ColorPickerDialog.Builder) keepColorRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        final int h = keepColorRSDialog.getValue();
+                        final CustomColorDialog keepSecondColorRSDialog = new CustomColorDialog("Choix des couleurs (RS)", "Seconde couleur de l'intervalle", context);
+                        ((ColorPickerDialog.Builder) keepSecondColorRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialog) {
+                                final int secondH = keepSecondColorRSDialog.getValue();
+                                final CustomRadioDialog intervalRSDialog = new CustomRadioDialog("Couleurs à garder \nValeurs choisies : " + h + " et " + secondH, null, context, listInterval);
+                                ((AlertDialog.Builder) intervalRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                    @Override
+                                    public void onDismiss(DialogInterface dialog) {
+                                        boolean inter = intervalRSDialog.getValue() == 1;
+                                        revertList.add(rs.keepColor(h, secondH, inter));
+                                        refreshAction();
+                                    }
+                                });
+                                ((AlertDialog.Builder) intervalRSDialog.getBuilder()).show();
+                            }
+                        });
+                        ((ColorPickerDialog.Builder) keepSecondColorRSDialog.getBuilder()).show();
+                    }
+                });
+                ((ColorPickerDialog.Builder) keepColorRSDialog.getBuilder()).show();
+                return true;
+            case R.id.brightness:
+                final CustomInputDialog brightnessDialog = new CustomInputDialog("Choix du niveau de luminosité de l'image (0-200)", null, this);
+                ((AlertDialog.Builder) brightnessDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = brightnessDialog.getValue();
+                        if (value <= 200 && value >= 0) {
+                            bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                            revertList.add(java.changeBitmapBrightness((float) value / 100f));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) brightnessDialog.getBuilder()).show();
                 return true;
             case R.id.dynamicExpansion:
-                dynamicExpansion();
+                revertList.add(java.dynamicExpansion());
+                refreshAction();
                 return true;
             case R.id.dynamicExpansionRS:
-                dynamicExpansionRS();
+                revertList.add(rs.dynamicExpansion());
+                refreshAction();
                 return true;
             case R.id.contrastDiminution:
-                inputDialog(AlgorithmVersion.JAVA, AlgorithmType.CONTRAST_DIMINUTION);
+                final CustomRadioDialog contrastDialog = new CustomRadioDialog("Choix de la diminution", null, this, listContrast);
+                ((AlertDialog.Builder) contrastDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int choice = contrastDialog.getValue();
+                        if (choice >= 0) {
+                            revertList.add(java.contrastDiminution(choice));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) contrastDialog.getBuilder()).show();
                 return true;
             case R.id.contrastDiminutionRS:
-                inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.CONTRAST_DIMINUTION);
+                final CustomRadioDialog constrastRSDialog = new CustomRadioDialog("Choix de la diminution (RS)", null, this, listContrast);
+                ((AlertDialog.Builder) constrastRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int choice = constrastRSDialog.getValue();
+                        if (choice >= 0) {
+                            revertList.add(rs.contrastDiminution(choice));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) constrastRSDialog.getBuilder()).show();
                 return true;
             case R.id.histogramEqualization:
-                histogramEqualization();
+                revertList.add(java.histogramEqualization());
+                refreshAction();
                 return true;
             case R.id.histogramEqualizationRS:
-                histogramEqualizationRS();
+                revertList.add(rs.histogramEqualization());
+                refreshAction();
                 return true;
             case R.id.averageFilter:
-                inputDialog(AlgorithmVersion.JAVA, AlgorithmType.AVERAGE_CONVOLUTION);
+                final CustomInputDialog averageDialog = new CustomInputDialog("Choix de la taille du noyau de convolution", "Le nombre rentré doit être impair", this);
+                ((AlertDialog.Builder) averageDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = averageDialog.getValue();
+                        if (value > 0 && value % 2 == 1) {
+                            revertList.add(java.blurConvolution(0, value));
+                            refreshAction();
+                        } else
+                            Toast.makeText(context, "Nombre invalide", Toast.LENGTH_LONG).show();
+                    }
+                });
+                ((AlertDialog.Builder) averageDialog.getBuilder()).show();
                 return true;
             case R.id.averageFilterRS:
-                inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
+                final CustomInputDialog averageDialogRS = new CustomInputDialog("Choix de la taille du noyau de convolution (RS)", "Le nombre rentré doit être impair", this);
+                ((AlertDialog.Builder) averageDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = averageDialogRS.getValue();
+                        if (value > 0 && value % 2 == 1) {
+                            revertList.add(rs.blurConvolution(0, value));
+                            refreshAction();
+                        } else
+                            Toast.makeText(context, "Nombre invalide", Toast.LENGTH_LONG).show();
+                    }
+                });
+                ((AlertDialog.Builder) averageDialogRS.getBuilder()).show();
+                return true;
+            case R.id.gaussConvolution:
+                final CustomRadioDialog gaussDialog = new CustomRadioDialog("Choix de la taille du filtre de Gauss", null, this, listGauss);
+                ((AlertDialog.Builder) gaussDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = gaussDialog.getValue();
+                        if (value >= 0) {
+                            revertList.add(java.blurConvolution(1, Integer.parseInt(listGauss[value])));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) gaussDialog.getBuilder()).show();
+                return true;
+            case R.id.gaussConvolutionRS:
+                final CustomRadioDialog gaussDialogRS = new CustomRadioDialog("Choix de la taille du filtre de Gauss (RS)", null, this, listGauss);
+                ((AlertDialog.Builder) gaussDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = gaussDialogRS.getValue();
+                        if (value >= 0) {
+                            revertList.add(rs.blurConvolution(1, Integer.parseInt(listGauss[value])));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) gaussDialogRS.getBuilder()).show();
                 return true;
             case R.id.sobelConvolution:
-                sobelFilterConvolution();
+                revertList.add(java.sobelFilterConvolution());
+                refreshAction();
                 return true;
             case R.id.sobelConvolutionRS:
-//                sobelFilterConvolutionRS();
+                revertList.add(rs.sobelFilterConvolution());
+                refreshAction();
+                return true;
+            case R.id.laplacienConvolution:
+                revertList.add(java.laplacienFilterConvolution());
+                refreshAction();
+                return true;
+            case R.id.laplacienConvolutionRS:
+                revertList.add(rs.laplacienFilterConvolution());
+                refreshAction();
+                return true;
+            case R.id.cartoonEffect:
+                revertList.add(java.cartoonEffect());
+                refreshAction();
+                return true;
+            case R.id.snowEffect:
+                revertList.add(java.snowEffect());
+                refreshAction();
+                return true;
+            case R.id.snowEffectRS:
+                revertList.add(rs.snowEffect());
+                refreshAction();
+                return true;
+            case R.id.imageIncrustation:
+                revertList.add(java.objectIncrustation());
+                refreshAction();
                 return true;
             case R.id.reinitialization:
                 bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                revertList.clear();
+                revertList.add(initialPixels);
+                refreshAction();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    /**
+     * Associate functions to the activity's buttons.
+     *
+     * @param v the button clicked
+     */
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -193,37 +412,100 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 saveImage();
 //                loadingDialog.stopDialog();
                 break;
+            case R.id.revert:
+                if (revertList.size() > 1) {
+                    invertList.add(revertList.get(revertList.size() - 1));
+                    revertList.remove(revertList.size() - 1);
+                    bitmap.setPixels(revertList.get(revertList.size() - 1), 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                }
+                refreshButton();
+                break;
+            case R.id.invert:
+                if (invertList.size() > 0) {
+                    revertList.add(invertList.get(invertList.size() - 1));
+                    invertList.remove(invertList.size() - 1);
+                    bitmap.setPixels(revertList.get(revertList.size() - 1), 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                }
+                refreshButton();
+                break;
         }
     }
 
+    /**
+     * Management of the touch event with the scroll and the zoom.
+     *
+     * @param v     the view on which the event is applied
+     * @param event the event
+     * @return true
+     */
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        SGD.onTouchEvent(event);
+    public boolean onTouch(View v, MotionEvent event) {
+        ImageView view = (ImageView) v;
+        view.setScaleType(ImageView.ScaleType.MATRIX);
 
-        switch (event.getAction()) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
-                mx = event.getX();
-                my = event.getY();
+                savedMatrix.set(matrix);
+                start.set(event.getX(), event.getY());
+                mode = DRAG;
                 break;
-            case MotionEvent.ACTION_MOVE:
-                curX = event.getX();
-                curY = event.getY();
-                im.scrollBy((int) (mx - curX), (int) (my - curY));
-                mx = curX;
-                my = curY;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                oldDist = spacing(event);
+                if (oldDist > 10f) {
+                    savedMatrix.set(matrix);
+                    midPoint(mid, event);
+                    mode = ZOOM;
+                }
                 break;
             case MotionEvent.ACTION_UP:
-                curX = event.getX();
-                curY = event.getY();
-                im.scrollBy((int) (mx - curX), (int) (my - curY));
+            case MotionEvent.ACTION_POINTER_UP:
+                mode = NONE;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mode == DRAG) {
+                    matrix.set(savedMatrix);
+                    matrix.postTranslate(event.getX() - start.x, event.getY() - start.y);
+                } else if (mode == ZOOM) {
+                    float newDist = spacing(event);
+                    if (newDist > 10f) {
+                        matrix.set(savedMatrix);
+                        float scale = newDist / oldDist;
+                        matrix.postScale(scale, scale, mid.x, mid.y);
+                    }
+                }
                 break;
         }
 
+        view.setImageMatrix(matrix);
         return true;
     }
 
     /**
-     * Initialize the bitmap.
+     * Return the distance between the two fingers for a zoom event.
+     *
+     * @param event the event
+     * @return the distance
+     */
+    private float spacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float) Math.sqrt(x * x + y * y);
+    }
+
+    /**
+     * Set a point to the center of the line created by the two fingers for a zoom event.
+     *
+     * @param point the point to set
+     * @param event the event
+     */
+    private void midPoint(PointF point, MotionEvent event) {
+        float x = event.getX(0) + event.getX(1);
+        float y = event.getY(0) + event.getY(1);
+        point.set(x / 2, y / 2);
+    }
+
+    /**
+     * Initialize the bitmap with a rotation if needed.
      */
     private void initialization() {
         Intent intent = getIntent();
@@ -252,14 +534,88 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         initialPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        revertList.add(initialPixels);
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) im.getLayoutParams();
+        float width = (float) size.x - lp.rightMargin - lp.leftMargin;
+        float height = (float) size.y - lp.bottomMargin - lp.topMargin;
+        float scaleW = width / bitmap.getWidth();
+        float scaleH = height / bitmap.getHeight();
+        matrix = im.getImageMatrix();
+        savedMatrix = im.getImageMatrix();
+        float scale = scaleW > scaleH ? scaleH : scaleW;
+        matrix.setScale(scale, scale);
+        savedMatrix.setScale(scale, scale);
+
+        Log.i("aya", "" + scaleW + " " + scaleH + " " + scale + " " + getBitmapPositionInsideImageView(im));
     }
 
+    /**
+     * Returns the bitmap position inside an imageView.
+     * @param imageView source ImageView
+     * @return 0: left, 1: top, 2: width, 3: height
+     */
+    public static int[] getBitmapPositionInsideImageView(ImageView imageView) {
+        int[] ret = new int[4];
+
+        if (imageView == null || imageView.getDrawable() == null)
+            return ret;
+
+        // Get image dimensions
+        // Get image matrix values and place them in an array
+        float[] f = new float[9];
+        imageView.getImageMatrix().getValues(f);
+
+        // Extract the scale values using the constants (if aspect ratio maintained, scaleX == scaleY)
+        final float scaleX = f[Matrix.MSCALE_X];
+        final float scaleY = f[Matrix.MSCALE_Y];
+
+        // Get the drawable (could also get the bitmap behind the drawable and getWidth/getHeight)
+        final Drawable d = imageView.getDrawable();
+        final int origW = d.getIntrinsicWidth();
+        final int origH = d.getIntrinsicHeight();
+
+        // Calculate the actual dimensions
+        final int actW = Math.round(origW * scaleX);
+        final int actH = Math.round(origH * scaleY);
+
+        ret[2] = actW;
+        ret[3] = actH;
+
+        // Get image position
+        // We assume that the image is centered into ImageView
+        int imgViewW = imageView.getWidth();
+        int imgViewH = imageView.getHeight();
+
+        int top = (int) (imgViewH - actH)/2;
+        int left = (int) (imgViewW - actW)/2;
+        Log.i("aya", "" + top + " " + left + " " + actW + " " + actH);
+
+        ret[0] = left;
+        ret[1] = top;
+
+        return ret;
+    }
+
+    /**
+     * Rotate a bitmap.
+     *
+     * @param source the bitmap to rotate
+     * @param angle  the rotation's angle
+     * @return the new bitmap after the rotation
+     */
     public static Bitmap rotateImage(Bitmap source, float angle) {
         Matrix matrix = new Matrix();
         matrix.postRotate(angle);
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
+    /**
+     * Save the image with all the modifications the user has done.
+     */
     private void saveImage() {
         String path = Environment.getExternalStorageDirectory().toString();
         OutputStream out = null;
@@ -284,661 +640,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * ---------------
-     * |  JAVA PART  |
-     * ---------------
+     * Refresh the revert and invert buttons if they are clicked.
      */
-
-    /**
-     * Transform a pixel into a pixel which will be in gray scale.
-     *
-     * @param pixel the pixel to transform
-     * @return the gray pixel
-     */
-    public int pixelToGray(int pixel) {
-        return (int) (0.3 * Color.red(pixel) + 0.59 * Color.green(pixel) + 0.11 * Color.blue(pixel));
+    private void refreshButton() {
+        revert.setEnabled(revertList.size() > 1 ? true : false);
+        invert.setEnabled(invertList.size() > 0 ? true : false);
+        revert.setVisibility(revertList.size() > 1 ? View.VISIBLE : View.INVISIBLE);
+        invert.setVisibility(invertList.size() > 0 ? View.VISIBLE : View.INVISIBLE);
     }
 
     /**
-     * @deprecated First version of image transformation to gray.
-     * Worst version.
+     * Refresh the revert and invert buttons when the user use an algorithm on the image.
      */
-    private void toGrayFirstVersion() {
-        for (int i = 0; i < bitmap.getWidth(); i++) {
-            for (int j = 0; j < bitmap.getHeight(); j++) {
-                int pixel = bitmap.getPixel(i, j);
-                int pixelGray = pixelToGray(pixel);
-                int newPixel = Color.argb(Color.alpha(pixel), pixelGray, pixelGray, pixelGray);
-                bitmap.setPixel(i, j, newPixel);
-            }
-        }
+    private void refreshAction() {
+        revert.setEnabled(revertList.size() > 1 ? true : false);
+        revert.setVisibility(revertList.size() > 1 ? View.VISIBLE : View.INVISIBLE);
+        invertList.clear();
+        invert.setEnabled(false);
+        invert.setVisibility(View.INVISIBLE);
     }
 
-    /**
-     * Second version of image transformation to gray.
-     * Better than the first.
-     */
-    private void toGraySecondVersion() {
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        for (int i = 0; i < pixels.length; i++) {
-            int pixelGray = pixelToGray(pixels[i]);
-            pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
-        }
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-    }
-
-    /**
-     * Third version of image transformation to gray.
-     * Better than the first.
-     */
-    private void toGrayThirdVersion() {
-        ColorMatrix m = new ColorMatrix();
-        m.setSaturation(0);
-        ColorMatrixColorFilter filter = new ColorMatrixColorFilter(m);
-        im.setColorFilter(filter);
-    }
-
-    /**
-     * Show a color dialog to choose one color which will be useful to an image transformation algorithm.
-     * Use of an external widget : ColorPickerView
-     * Link : https://github.com/skydoves/ColorPickerView
-     *
-     * @param version the version of the algorithm to execute
-     * @param type    the type of algorithm
-     */
-    private void colorDialog(final AlgorithmVersion version, final AlgorithmType type) {
-        new ColorPickerDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
-                .setTitle("Choix de la couleur")
-                .setPositiveButton(getString(R.string.validate), new ColorListener() {
-                    @Override
-                    public void onColorSelected(int color, boolean fromUser) {
-                        final int h = (int) myRgbToHsv(Color.red(color), Color.green(color), Color.blue(color))[0];
-                        switch (type) {
-                            case COLORIZE:
-                                switch (version) {
-                                    case JAVA:
-                                        colorize(h);
-                                        break;
-                                    case RENDERSCRIPT:
-                                        colorizeRS(h);
-                                        break;
-                                }
-                                break;
-                            case KEEP_COLOR:
-                                final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                                builder.setTitle("Choix de l'intervalle");
-                                builder.setMessage("Choississez la valeur de l'intervalle total à garder");
-                                final EditText input = new EditText(context);
-                                input.setInputType(InputType.TYPE_CLASS_NUMBER);
-                                input.setRawInputType(Configuration.KEYBOARD_12KEY);
-                                builder.setView(input);
-
-                                builder.setPositiveButton(getString(R.string.validate), new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int whichButton) {
-                                        int interval = Integer.parseInt(input.getText().toString());
-                                        switch (version) {
-                                            case JAVA:
-                                                keepColor(h, interval);
-                                                break;
-                                            case RENDERSCRIPT:
-                                                keepColorRS(h, interval);
-                                                break;
-                                        }
-                                    }
-                                });
-                                builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int whichButton) {
-                                        dialog.dismiss();
-                                    }
-                                });
-                                builder.show();
-                                break;
-                        }
-                    }
-                })
-                .setNegativeButton(getString(R.string.cancel),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-                            }
-                        })
-                .attachAlphaSlideBar(false)
-                .attachBrightnessSlideBar(false)
-                .show();
-    }
-
-    /**
-     * Show an input dialog to choose a value.
-     */
-    private void inputDialog(final AlgorithmVersion version, final AlgorithmType type) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        switch (type) {
-            case CONTRAST_DIMINUTION:
-                builder.setTitle("Choix de la diminution");
-                break;
-            case AVERAGE_CONVOLUTION:
-                builder.setTitle("Choix de la taille du noyau de convolution");
-                builder.setMessage("Le nombre rentré doit être impair");
-                break;
-        }
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
-        input.setRawInputType(Configuration.KEYBOARD_12KEY);
-        builder.setView(input);
-
-        builder.setPositiveButton(getString(R.string.validate), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                if (!input.getText().toString().matches("")) {
-                    int value = Integer.parseInt(input.getText().toString());
-                    switch (type) {
-                        case CONTRAST_DIMINUTION:
-                            switch (version) {
-                                case JAVA:
-                                    contrastDiminution(value);
-                                    break;
-                                case RENDERSCRIPT:
-                                    contrastDiminutionRS(value);
-                                    break;
-                            }
-                            break;
-                        case AVERAGE_CONVOLUTION:
-                            switch (version) {
-                                case JAVA:
-                                    if (value % 2 == 1) {
-                                        averageFilterConvolution(value);
-                                    } else {
-                                        inputDialog(AlgorithmVersion.JAVA, AlgorithmType.AVERAGE_CONVOLUTION);
-                                    }
-                                    break;
-                                case RENDERSCRIPT:
-                                    if (value % 2 == 1) {
-//                                    averageFilterConvolutionRS(value);
-                                    } else {
-                                        inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
-                                    }
-                                    break;
-                            }
-                    }
-                }
-            }
-        });
-        builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                dialog.dismiss();
-            }
-        });
-        builder.show();
-    }
-
-    /**
-     * Colorize the bitmap with a hue.
-     *
-     * @param color the hue chosen by the user
-     */
-    private void colorize(int color) {
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        for (int i = 0; i < pixels.length; i++) {
-            /**
-             * Java functions
-             */
-//            float[] hsv = new float[3];
-//            Color.RGBToHSV(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]), hsv);
-//            hsv[0] = color;
-//            int newColor = Color.HSVToColor(hsv);
-//            pixels[i] = newColor;
-
-            /**
-             * Recoded functions
-             */
-            float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-            hsv[0] = color;
-            float[] rgb = myHsvToRgb(hsv[0], hsv[1] / 100, hsv[2] / 100);
-            pixels[i] = Color.argb(Color.alpha(pixels[i]), (int) rgb[0], (int) rgb[1], (int) rgb[2]);
-        }
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-    }
-
-    /**
-     * Keep an interval of color of the bitmap and colorize the pixels which are not in this interval in gray scale.
-     *
-     * @param color    the hue chosen by the user
-     * @param interval the interval to keep
-     */
-    private void keepColor(int color, int interval) {
-        int interLeft = color - interval / 2;
-        int interRight = color + interval / 2;
-        if (interLeft < 0) {
-            int tmp = interLeft;
-            interLeft = interRight;
-            interRight = 360 + (tmp % 360);
-        }
-        if (interRight > 360) {
-            int tmp = interRight;
-            interRight = interLeft;
-            interLeft = tmp % 360;
-        }
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        for (int i = 0; i < pixels.length; i++) {
-            /**
-             * Java functions
-             */
-//            float[] hsv = new float[3];
-//            Color.RGBToHSV(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]), hsv);
-
-            /**
-             * Recoded functions
-             */
-            float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-
-            if (interLeft < hsv[0] && interRight > hsv[0]) {
-                int pixelGray = pixelToGray(pixels[i]);
-                pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
-            }
-        }
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-    }
-
-    /**
-     * Extend the pixels values if possible.
-     */
-    private void dynamicExpansion() {
-        int size = 101;
-        int[] LUTValue = new int[size];
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        int maxValue = 0, minValue = 100;
-
-        for (int i = 0; i < size; i++) {
-            LUTValue[i] = 0;
-        }
-
-        for (int i = 0; i < pixels.length; i++) {
-            float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-            if ((int) hsv[2] > maxValue)
-                maxValue = (int) hsv[2];
-            if ((int) hsv[2] < minValue)
-                minValue = (int) hsv[2];
-        }
-
-        if (maxValue != 100 && minValue != 0 && maxValue - minValue != 0) {
-            for (int i = 0; i < size; i++) {
-                LUTValue[i] = 100 * (i - minValue) / (maxValue - minValue);
-            }
-
-            for (int i = 0; i < pixels.length; i++) {
-                float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-                hsv[2] = LUTValue[(int) hsv[2]];
-                float[] rgb = myHsvToRgb(hsv[0], hsv[1] / 100, hsv[2] / 100);
-                pixels[i] = Color.argb(Color.alpha(pixels[i]), (int) rgb[0], (int) rgb[1], (int) rgb[2]);
-            }
-
-            bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        }
-    }
-
-    /**
-     * Close the interval of pixels values.
-     *
-     * @param diminution the diminution asked by the user
-     */
-    private void contrastDiminution(int diminution) {
-        int size = 101;
-        int[] LUTValue = new int[size];
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        int maxValue = 0, minValue = 100;
-
-        for (int i = 0; i < size; i++) {
-            LUTValue[i] = 0;
-        }
-
-        for (int i = 0; i < pixels.length; i++) {
-            float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-            if ((int) hsv[2] > maxValue)
-                maxValue = (int) hsv[2];
-            if ((int) hsv[2] < minValue)
-                minValue = (int) hsv[2];
-        }
-
-        int maxValue2 = maxValue - diminution, minValue2 = minValue + diminution;
-
-        if (maxValue2 > minValue2 && maxValue2 - minValue2 != 0) {
-            for (int i = 0; i < size; i++) {
-                LUTValue[i] = (i - minValue) * (maxValue2 - minValue2) / (maxValue - minValue) + minValue2;
-            }
-
-            for (int i = 0; i < pixels.length; i++) {
-                float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-                hsv[2] = LUTValue[(int) hsv[2]];
-                float[] rgb = myHsvToRgb(hsv[0], hsv[1] / 100, hsv[2] / 100);
-                pixels[i] = Color.argb(Color.alpha(pixels[i]), (int) rgb[0], (int) rgb[1], (int) rgb[2]);
-            }
-
-            bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        }
-    }
-
-    /**
-     * Equalize the pixels values.
-     */
-    private void histogramEqualization() {
-        int size = 101;
-        int[] histV = new int[size];
-        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        for (int i = 0; i < size; i++) {
-            histV[i] = 0;
-        }
-        for (int i = 0; i < pixels.length; i++) {
-            float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-            histV[(int) hsv[2]]++;
-        }
-
-        int[] histVC = new int[size];
-        histVC[0] = histV[0];
-        for (int i = 1; i < size; i++) {
-            histVC[i] = histVC[i - 1] + histV[i];
-        }
-
-        for (int i = 0; i < pixels.length; i++) {
-            float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-            hsv[2] = histVC[(int) hsv[2]] * 100 / pixels.length;
-            float[] rgb = myHsvToRgb(hsv[0], hsv[1] / 100, hsv[2] / 100);
-            pixels[i] = Color.argb(Color.alpha(pixels[i]), (int) rgb[0], (int) rgb[1], (int) rgb[2]);
-        }
-
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-    }
-
-    /**
-     * Apply an average filter on the image.
-     * It will blur the image.
-     *
-     * @param size the size of the kernel
-     */
-    public void averageFilterConvolution(int size) {
-        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(size);
-        double moy = 1.0 / (size * size);
-        convolutionMatrix.setMatrix(moy);
-        int[] pixels = convolutionMatrix.applyConvolution(bitmap);
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-    }
-
-    /**
-     * Apply a Sobel filter on the image.
-     * It will mark the image outlines.
-     */
-    public void sobelFilterConvolution() {
-        double[][] sobelHorizontal = new double[][]{
-                {-1, 0, 1},
-                {-2, 0, 2},
-                {-1, 0, 1}
-        };
-        double[][] sobelVertical = new double[][]{
-                {1, 2, 1},
-                {0, 0, 0},
-                {-1, -2, -1}
-        };
-
-        int size = 3;
-        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(size);
-        convolutionMatrix.setMatrix(sobelHorizontal);
-        int[] sobelPixelsHorizontal = convolutionMatrix.applyConvolution(bitmap);
-        convolutionMatrix.setMatrix(sobelVertical);
-        int[] sobelPixelsVertical = convolutionMatrix.applyConvolution(bitmap);
-        int[] sobelPixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-
-        for (int i = 0; i < sobelPixels.length; i++) {
-            int pixelRed = (int) Math.sqrt(Math.pow(Color.red(sobelPixelsHorizontal[i]), 2) + Math.pow(Color.red(sobelPixelsVertical[i]), 2));
-            int pixelGreen = (int) Math.sqrt(Math.pow(Color.green(sobelPixelsHorizontal[i]), 2) + Math.pow(Color.green(sobelPixelsVertical[i]), 2));
-            int pixelBlue = (int) Math.sqrt(Math.pow(Color.blue(sobelPixelsHorizontal[i]), 2) + Math.pow(Color.blue(sobelPixelsVertical[i]), 2));
-            sobelPixels[i] = Color.argb(Color.alpha(sobelPixelsHorizontal[i]),
-                    pixelRed > 255 ? 255 : pixelRed,
-                    pixelGreen > 255 ? 255 : pixelGreen,
-                    pixelBlue > 255 ? 255 : pixelBlue);
-        }
-
-        bitmap.setPixels(sobelPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-    }
-
-    /**
-     * Recoded function to transform rgb values into hsv values.
-     *
-     * @param red   the red value of the pixel [0-255]
-     * @param green the green value of the pixel [0-255]
-     * @param blue  the blue value of the pixel [0-255]
-     * @return an array which contain the hue, the saturation and the value of the pixel
-     */
-    private float[] myRgbToHsv(float red, float green, float blue) {
-        float r = red / 255;
-        float g = green / 255;
-        float b = blue / 255;
-
-        float max = Math.max(r, Math.max(g, b));
-        float min = Math.min(r, Math.min(g, b));
-        float d = max - min;
-        float h, s, v;
-
-        if (max == min)
-            h = 0;
-        else if (max == r)
-            h = (60 * ((g - b) / d) + 360) % 360;
-        else if (max == g)
-            h = (60 * ((b - r) / d) + 120) % 360;
-        else
-            h = (60 * ((r - g) / d) + 240) % 360;
-
-        if (max == 0)
-            s = 0;
-        else
-            s = (d / max) * 100;
-
-        v = max * 100;
-
-        return new float[]{h, s, v};
-    }
-
-    /**
-     * Recoded function to transform hsv values into rgb values.
-     *
-     * @param h the hue of the pixel [0-360]
-     * @param s the saturation of the pixel [0-1]
-     * @param v the value of the pixel [0-1]
-     * @return an array which contain the red value, the green value and the blue value of the pixel
-     */
-    private float[] myHsvToRgb(float h, float s, float v) {
-        float c = s * v;
-        float newH = h / 60;
-        float x = c * (1 - Math.abs((newH % 2) - 1));
-        float r, g, b;
-
-        if (0 <= newH && newH < 1) {
-            r = c;
-            g = x;
-            b = 0;
-        } else if (1 <= newH && newH < 2) {
-            r = x;
-            g = c;
-            b = 0;
-        } else if (2 <= newH && newH < 3) {
-            r = 0;
-            g = c;
-            b = x;
-        } else if (3 <= newH && newH < 4) {
-            r = 0;
-            g = x;
-            b = c;
-        } else if (4 <= newH && newH < 5) {
-            r = x;
-            g = 0;
-            b = c;
-        } else {
-            r = c;
-            g = 0;
-            b = x;
-        }
-
-        float m = v - c;
-        return new float[]{(r + m) * 255, (g + m) * 255, (b + m) * 255};
-    }
-
-    /**
-     * -----------------------
-     * |  RENDERSCRIPT PART  |
-     * -----------------------
-     */
-
-    /**
-     * Transform the image in gray scale using renderscript.
-     */
-    private void toGrayRS() {
-        RenderScript rs = RenderScript.create(this);
-
-        Allocation input = Allocation.createFromBitmap(rs, bitmap);
-        Allocation output = Allocation.createTyped(rs, input.getType());
-
-        ScriptC_gray grayScript = new ScriptC_gray(rs);
-
-        grayScript.forEach_toGray(input, output);
-
-        output.copyTo(bitmap);
-
-        input.destroy();
-        output.destroy();
-        grayScript.destroy();
-        rs.destroy();
-    }
-
-    /**
-     * Colorize the image using renderscript.
-     *
-     * @param color the color to apply to the image
-     */
-    private void colorizeRS(int color) {
-        RenderScript rs = RenderScript.create(this);
-
-        Allocation input = Allocation.createFromBitmap(rs, bitmap);
-        Allocation output = Allocation.createTyped(rs, input.getType());
-
-        ScriptC_colorize colorizeScript = new ScriptC_colorize(rs);
-
-        colorizeScript.set_color(color);
-
-        colorizeScript.forEach_colorize(input, output);
-
-        output.copyTo(bitmap);
-
-        input.destroy();
-        output.destroy();
-        colorizeScript.destroy();
-        rs.destroy();
-    }
-
-    /**
-     * Keep an interval of colors using renderscript.
-     * // TODO adapter comme version java
-     *
-     * @param color    the color to keep
-     * @param interval the interval
-     */
-    private void keepColorRS(int color, int interval) {
-        RenderScript rs = RenderScript.create(this);
-
-        Allocation input = Allocation.createFromBitmap(rs, bitmap);
-        Allocation output = Allocation.createTyped(rs, input.getType());
-
-        ScriptC_keepColor keepColorScript = new ScriptC_keepColor(rs);
-
-        keepColorScript.set_color(color);
-        keepColorScript.set_interval(interval);
-
-        keepColorScript.forEach_keepColor(input, output);
-
-        output.copyTo(bitmap);
-
-        input.destroy();
-        output.destroy();
-        keepColorScript.destroy();
-        rs.destroy();
-    }
-
-    /**
-     * Extend the pixels values using renderscript.
-     */
-    private void dynamicExpansionRS() {
-        RenderScript rs = RenderScript.create(this);
-
-        Allocation input = Allocation.createFromBitmap(rs, bitmap);
-        Allocation output = Allocation.createTyped(rs, input.getType());
-
-        ScriptC_dynamicExpansion dynamicExpansionScript = new ScriptC_dynamicExpansion(rs);
-
-        dynamicExpansionScript.forEach_minMax(input);
-        dynamicExpansionScript.invoke_createLUTExpanded();
-        dynamicExpansionScript.forEach_expansion(input, output);
-
-        output.copyTo(bitmap);
-
-        input.destroy();
-        output.destroy();
-        dynamicExpansionScript.destroy();
-        rs.destroy();
-    }
-
-    /**
-     * Close the interval of pixels values using renderscript.
-     *
-     * @param diminution the diminution asked by the user
-     */
-    private void contrastDiminutionRS(int diminution) {
-        RenderScript rs = RenderScript.create(this);
-
-        Allocation input = Allocation.createFromBitmap(rs, bitmap);
-        Allocation output = Allocation.createTyped(rs, input.getType());
-
-        ScriptC_contrastDiminution contrastDiminutionScript = new ScriptC_contrastDiminution(rs);
-
-        contrastDiminutionScript.set_diminution(diminution);
-
-        contrastDiminutionScript.forEach_minMax(input);
-        contrastDiminutionScript.invoke_initNewMinMaxValues();
-        contrastDiminutionScript.invoke_createLUTExpanded();
-        contrastDiminutionScript.forEach_applyDiminution(input, output);
-
-        output.copyTo(bitmap);
-
-        input.destroy();
-        output.destroy();
-        contrastDiminutionScript.destroy();
-        rs.destroy();
-    }
-
-    /**
-     * Equalize the pixels values using renderscript.
-     */
-    private void histogramEqualizationRS() {
-        RenderScript rs = RenderScript.create(this);
-
-        Allocation input = Allocation.createFromBitmap(rs, bitmap);
-        Allocation output = Allocation.createTyped(rs, input.getType());
-
-        ScriptC_histogramEqualization histEqScript = new ScriptC_histogramEqualization(rs);
-
-        histEqScript.set_size(bitmap.getWidth() * bitmap.getHeight());
-
-        histEqScript.forEach_incHisto(input);
-        histEqScript.invoke_createHistoCumul();
-        histEqScript.forEach_equalization(input, output);
-
-        output.copyTo(bitmap);
-
-        input.destroy();
-        output.destroy();
-        histEqScript.destroy();
-        rs.destroy();
-    }
 }

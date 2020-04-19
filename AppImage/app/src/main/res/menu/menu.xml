@@ -5,29 +5,65 @@
         android:title="@string/javaFunctions">
         <menu>
             <item
-                android:id="@+id/gray"
-                android:title="@string/gray" />
+                android:id="@+id/baseAlgo"
+                android:title="@string/baseAlgorithm">
+                <menu>
+                    <item
+                        android:id="@+id/gray"
+                        android:title="@string/gray" />
+                    <item
+                        android:id="@+id/colorize"
+                        android:title="@string/colorize" />
+                    <item
+                        android:id="@+id/keepColor"
+                        android:title="@string/keepColor" />
+                    <item
+                        android:id="@+id/brightness"
+                        android:title="@string/brightness" />
+                    <item
+                        android:id="@+id/dynamicExpansion"
+                        android:title="@string/dynamicExpansion" />
+                    <item
+                        android:id="@+id/contrastDiminution"
+                        android:title="@string/contrastDiminution" />
+                    <item
+                        android:id="@+id/histogramEqualization"
+                        android:title="@string/histogramEqualization" />
+                </menu>
+            </item>
             <item
-                android:id="@+id/colorize"
-                android:title="@string/colorize" />
+                android:id="@+id/convolutionAlgo"
+                android:title="@string/convolutionAlgorithm">
+                <menu>
+                    <item
+                        android:id="@+id/averageFilter"
+                        android:title="@string/averageFilter" />
+                    <item
+                        android:id="@+id/gaussConvolution"
+                        android:title="@string/gaussConvolution" />
+                    <item
+                        android:id="@+id/sobelConvolution"
+                        android:title="@string/sobelConvolution" />
+                    <item
+                        android:id="@+id/laplacienConvolution"
+                        android:title="@string/laplacienConvolution" />
+                </menu>
+            </item>
             <item
-                android:id="@+id/keepColor"
-                android:title="@string/keepColor" />
-            <item
-                android:id="@+id/dynamicExpansion"
-                android:title="@string/dynamicExpansion" />
-            <item
-                android:id="@+id/contrastDiminution"
-                android:title="@string/contrastDiminution" />
-            <item
-                android:id="@+id/histogramEqualization"
-                android:title="@string/histogramEqualization" />
-            <item
-                android:id="@+id/averageFilter"
-                android:title="@string/averageFilter" />
-            <item
-                android:id="@+id/sobelConvolution"
-                android:title="@string/sobelConvolution" />
+                android:id="@+id/advancedAlgo"
+                android:title="@string/advancedAlgorithm">
+                <menu>
+                    <item
+                        android:id="@+id/cartoonEffect"
+                        android:title="@string/cartoonEffect" />
+                    <item
+                        android:id="@+id/snowEffect"
+                        android:title="@string/snowEffect" />
+                    <item
+                        android:id="@+id/imageIncrustation"
+                        android:title="@string/incrustation" />
+                </menu>
+            </item>
         </menu>
     </item>
     <item
@@ -35,31 +71,56 @@
         android:title="@string/renderscriptFunctions">
         <menu>
             <item
-                android:id="@+id/grayRS"
-                android:title="@string/gray" />
+                android:id="@+id/baseAlgoRS"
+                android:title="@string/baseAlgorithm">
+                <menu>
+                    <item
+                        android:id="@+id/grayRS"
+                        android:title="@string/gray" />
+                    <item
+                        android:id="@+id/colorizeRS"
+                        android:title="@string/colorize" />
+                    <item
+                        android:id="@+id/keepColorRS"
+                        android:title="@string/keepColor" />
+                    <item
+                        android:id="@+id/dynamicExpansionRS"
+                        android:title="@string/dynamicExpansion" />
+                    <item
+                        android:id="@+id/contrastDiminutionRS"
+                        android:title="@string/contrastDiminution" />
+                    <item
+                        android:id="@+id/histogramEqualizationRS"
+                        android:title="@string/histogramEqualization" />
+                </menu>
+            </item>
             <item
-                android:id="@+id/colorizeRS"
-                android:title="@string/colorize" />
+                android:id="@+id/convolAlgoRS"
+                android:title="@string/convolutionAlgorithm">
+                <menu>
+                    <item
+                        android:id="@+id/averageFilterRS"
+                        android:title="@string/averageFilter"/>
+                    <item
+                        android:id="@+id/gaussConvolutionRS"
+                        android:title="@string/gaussConvolution" />
+                    <item
+                        android:id="@+id/sobelConvolutionRS"
+                        android:title="@string/sobelConvolution"/>
+                    <item
+                        android:id="@+id/laplacienConvolutionRS"
+                        android:title="@string/laplacienConvolution" />
+                </menu>
+            </item>
             <item
-                android:id="@+id/keepColorRS"
-                android:title="@string/keepColor" />
-            <item
-                android:id="@+id/dynamicExpansionRS"
-                android:title="@string/dynamicExpansion" />
-            <item
-                android:id="@+id/contrastDiminutionRS"
-                android:title="@string/contrastDiminution" />
-            <item
-                android:id="@+id/histogramEqualizationRS"
-                android:title="@string/histogramEqualization" />
-            <item
-                android:id="@+id/averageFilterRS"
-                android:title="@string/averageFilter"
-                android:enabled="false"/>
-            <item
-                android:id="@+id/sobelConvolutionRS"
-                android:title="@string/sobelConvolution"
-                android:enabled="false"/>
+                android:id="@+id/advancedAlgoRS"
+                android:title="@string/advancedAlgorithm">
+                <menu>
+                    <item
+                        android:id="@+id/snowEffectRS"
+                        android:title="@string/snowEffect" />
+                </menu>
+            </item>
         </menu>
     </item>
     <item

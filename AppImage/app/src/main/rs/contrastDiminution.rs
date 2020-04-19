@@ -1,12 +1,11 @@
 #pragma version(1)
-#pragma rs java_package_name(com.example.myappimage)
+#pragma rs java_package_name(com.example.myappimage.algorithm)
 
-int diminution;
+int dimChoice;
 int32_t LUTValue[101];
 int maxValue;
 int minValue;
 int newMaxValue;
-int newMinValue;
 
 void init() {
     maxValue = 0;
@@ -26,14 +25,23 @@ void RS_KERNEL minMax(uchar4 in) {
 }
 
 void initNewMinMaxValues() {
-    newMaxValue = maxValue - diminution;
-    newMinValue = minValue + diminution;
+    if (dimChoice == 0) {
+        newMaxValue = maxValue - 1;
+    } else if (dimChoice == 1) {
+        newMaxValue = maxValue - (maxValue + minValue) / 4;
+    } else if (dimChoice == 2) {
+        newMaxValue = maxValue - (maxValue + minValue) / 2;
+    } else if (dimChoice == 3) {
+        newMaxValue = maxValue - (3 * (maxValue + minValue) / 4);
+    } else {
+        newMaxValue = minValue + 1;
+    }
 }
 
 void createLUTExpanded() {
-    if (newMaxValue > newMinValue && newMaxValue - newMinValue != 0) {
+    if (newMaxValue > minValue && newMaxValue - minValue != 0) {
         for (int i = 0; i < 101; i++) {
-            LUTValue[i] = (i - minValue) * (newMaxValue - newMinValue) / (maxValue - minValue) + newMinValue;
+            LUTValue[i] = (i - minValue) * (newMaxValue - minValue) / (maxValue - minValue) + minValue;
         }
     }
 }
@@ -41,7 +49,7 @@ void createLUTExpanded() {
 uchar4 RS_KERNEL applyDiminution(uchar4 in) {
     float4 pixelf = rsUnpackColor8888(in);
 
-    if (newMaxValue > newMinValue && newMaxValue - newMinValue != 0) {
+    if (newMaxValue > minValue && newMaxValue - minValue != 0) {
         float maximum = max(pixelf.r, max(pixelf.g, pixelf.b));
         float minimum = min(pixelf.r, min(pixelf.g, pixelf.b));
         float d = maximum - minimum;

@@ -1,9 +1,10 @@
 #pragma version(1)
-#pragma rs java_package_name(com.example.myappimage)
+#pragma rs java_package_name(com.example.myappimage.algorithm)
 
 static const float4 weight = {0.299f, 0.587f, 0.114f, 0.0f};
-int color;
-int interval;
+int inter;
+int intervalLeft;
+int intervalRight;
 
 uchar4 RS_KERNEL keepColor(uchar4 in) {
     const float4 pixelf = rsUnpackColor8888(in);
@@ -23,9 +24,16 @@ uchar4 RS_KERNEL keepColor(uchar4 in) {
         h = (pixelf.r - pixelf.g) / d + 4;
     }
 
-    if (color - interval / 2 > h * 60 || color + interval / 2 < h * 60) {
-        const float gray = dot(pixelf, weight);
-        return rsPackColorTo8888(gray, gray, gray, pixelf.a);
+    if (inter == 1) {
+        if (h * 60 < intervalLeft || intervalRight < h * 60) {
+            const float gray = dot(pixelf, weight);
+            return rsPackColorTo8888(gray, gray, gray, pixelf.a);
+         }
+    } else {
+        if (h * 60 > intervalLeft && intervalRight > h * 60) {
+            const float gray = dot(pixelf, weight);
+            return rsPackColorTo8888(gray, gray, gray, pixelf.a);
+        }
     }
 
     return rsPackColorTo8888(pixelf.r, pixelf.g, pixelf.b, pixelf.a);

@@ -2,12 +2,13 @@ package com.example.myappimage;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.util.Log;
 
 /**
  * ConvolutionMatrix Class
  *
  * @author Dufau Vincent
- * Link : https://github.com/vdufau/Projet_Tech_L3
+ * Link : https://github.com/vdufau/Projet_Tech_Android
  */
 public class ConvolutionMatrix {
     private int size;
@@ -47,8 +48,6 @@ public class ConvolutionMatrix {
     /**
      * Apply the matrix to each pixel of the bitmap.
      *
-     * TODO Essayer de faire avec un tableau d'entier et pas une couleur pour le pixel et faire le traitement de transformation en pixel plus tard (ou un delire dans le style)
-     *
      * @param bitmap the bitmap to transform
      * @return an array which contain the new pixels values
      */
@@ -58,13 +57,14 @@ public class ConvolutionMatrix {
 
         int[] pixels = new int[width * height];
         int[] newPixels = new int[width * height];
-        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        bitmap.getPixels(newPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+        bitmap.getPixels(newPixels, 0, width, 0, 0, width, height);
 
         for (int y = size / 2; y < height - size / 2; y++) {
             for (int x = size / 2; x < width - size / 2; x++) {
 
-                int red = 0, green = 0, blue = 0;
+                double red = 0, green = 0, blue = 0;
                 for (int i = -(size / 2); i <= size / 2; i++) {
                     for (int j = -(size / 2); j <= size / 2; j++) {
                         int pixel = pixels[(y + i) * width + x + j];
@@ -81,7 +81,41 @@ public class ConvolutionMatrix {
                 if (blue < 0) blue = 0;
                 if (blue > 255) blue = 255;
 
-                newPixels[y * width + x] = Color.argb(Color.alpha(pixels[y * width + x]), red, green, blue);
+                newPixels[y * width + x] = Color.argb(Color.alpha(pixels[y * width + x]), (int) red, (int) green, (int) blue);
+            }
+        }
+
+        return newPixels;
+    }
+
+    /**
+     * Apply the matrix to each pixel of the gray bitmap.
+     *
+     * @param bitmap the bitmap to transform
+     * @return an array which contain the new pixels values
+     */
+    public int[] applyConvolutionOnGrayImage(Bitmap bitmap) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        int[] pixels = new int[width * height];
+        int[] newPixels = new int[width * height];
+
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+        bitmap.getPixels(newPixels, 0, width, 0, 0, width, height);
+
+        for (int y = size / 2; y < height - size / 2; y++) {
+            for (int x = size / 2; x < width - size / 2; x++) {
+
+                double newP = 0;
+                for (int i = -(size / 2); i <= size / 2; i++) {
+                    for (int j = -(size / 2); j <= size / 2; j++) {
+                        int pixel = pixels[(y + i) * width + x + j];
+                        newP += PixelTransformation.pixelToGray(pixel) * matrix[i + size / 2][j + size / 2];
+                    }
+                }
+
+                newPixels[y * width + x] = (int) newP;
             }
         }
 
