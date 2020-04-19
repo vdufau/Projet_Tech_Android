@@ -2,6 +2,9 @@
     <string name="app_name">Projet Technologique Android</string>
     <string name="javaFunctions">Version Java</string>
     <string name="renderscriptFunctions">Version Renderscript</string>
+    <string name="baseAlgorithm">Algorithmes de base</string>
+    <string name="convolutionAlgorithm">Algorithmes de convolution</string>
+    <string name="advancedAlgorithm">Algorithmes avancés</string>
     <string name="gray">Niveaux de gris</string>
     <string name="colorize">Colorisation</string>
     <string name="keepColor">Conservation</string>

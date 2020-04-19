@@ -143,12 +143,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (item.getItemId()) {
             case R.id.gray:
 //                toGrayFirstVersion();
-                revertList.add(java.toGraySecondVersion());
+                revertList.add(java.toGray());
 //                toGrayThirdVersion();
                 refreshAction();
                 return true;
             case R.id.grayRS:
-                revertList.add(rs.toGrayRS());
+                revertList.add(rs.toGray());
                 refreshAction();
                 return true;
             case R.id.colorize:
@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onDismiss(DialogInterface dialog) {
                         int value = colorizeRSDialog.getValue();
                         if (value >= 0) {
-                            revertList.add(rs.colorizeRS(value));
+                            revertList.add(rs.colorize(value));
                             refreshAction();
                         }
                     }
@@ -222,8 +222,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 ((AlertDialog.Builder) intervalRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                                     @Override
                                     public void onDismiss(DialogInterface dialog) {
-                                        int inter = intervalRSDialog.getValue();
-                                        revertList.add(rs.keepColorRS(h, secondH, inter));
+                                        boolean inter = intervalRSDialog.getValue() == 1;
+                                        revertList.add(rs.keepColor(h, secondH, inter));
                                         refreshAction();
                                     }
                                 });
@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 refreshAction();
                 return true;
             case R.id.dynamicExpansionRS:
-                revertList.add(rs.dynamicExpansionRS());
+                revertList.add(rs.dynamicExpansion());
                 refreshAction();
                 return true;
             case R.id.contrastDiminution:
@@ -279,7 +279,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onDismiss(DialogInterface dialog) {
                         int choice = constrastRSDialog.getValue();
                         if (choice >= 0) {
-                            revertList.add(rs.contrastDiminutionRS(choice));
+                            revertList.add(rs.contrastDiminution(choice));
                             refreshAction();
                         }
                     }
@@ -291,7 +291,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 refreshAction();
                 return true;
             case R.id.histogramEqualizationRS:
-                revertList.add(rs.histogramEqualizationRS());
+                revertList.add(rs.histogramEqualization());
                 refreshAction();
                 return true;
             case R.id.averageFilter:
@@ -301,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onDismiss(DialogInterface dialog) {
                         int value = averageDialog.getValue();
                         if (value > 0 && value % 2 == 1) {
-                            revertList.add(java.averageFilterConvolution(value));
+                            revertList.add(java.blurConvolution(0, value));
                             refreshAction();
                         } else
                             Toast.makeText(context, "Nombre invalide", Toast.LENGTH_LONG).show();
@@ -331,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onDismiss(DialogInterface dialog) {
                         int value = gaussDialog.getValue();
                         if (value >= 0) {
-                            revertList.add(java.gaussianFilterConvolution(Integer.parseInt(listGauss[value])));
+                            revertList.add(java.blurConvolution(1, Integer.parseInt(listGauss[value])));
                             refreshAction();
                         }
                     }

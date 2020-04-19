@@ -25,7 +25,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
-    public int[] toGrayRS() {
+    public int[] toGray() {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -49,7 +49,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      * @param color the color to apply to the image
      * @return the new pixels
      */
-    public int[] colorizeRS(int color) {
+    public int[] colorize(int color) {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -77,7 +77,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      * @param inter   the parameter which determine if the colors to keep are between the two hues or not
      * @return the new pixels
      */
-    public int[] keepColorRS(int h, int secondH, int inter) {
+    public int[] keepColor(int h, int secondH, boolean inter) {
         Bitmap bitmap = getBitmap();
         int[] interval = keepColorInteval(h, secondH);
 
@@ -86,7 +86,7 @@ public class RenderscriptAlgorithm extends Algorithm {
 
         ScriptC_keepColor keepColorScript = new ScriptC_keepColor(rs);
 
-        keepColorScript.set_inter(inter);
+        keepColorScript.set_inter(inter ? 1 : 0);
         keepColorScript.set_intervalLeft(interval[0]);
         keepColorScript.set_intervalRight(interval[1]);
 
@@ -105,7 +105,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
-    public int[] dynamicExpansionRS() {
+    public int[] dynamicExpansion() {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -131,7 +131,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      * @param dimChoice the diminution asked by the user
      * @return the new pixels
      */
-    public int[] contrastDiminutionRS(int dimChoice) {
+    public int[] contrastDiminution(int dimChoice) {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -159,7 +159,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
-    public int[] histogramEqualizationRS() {
+    public int[] histogramEqualization() {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -267,7 +267,7 @@ public class RenderscriptAlgorithm extends Algorithm {
                 1.0f, 2.0f, 1.0f
         };
 
-        toGrayRS();
+        toGray();
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -315,7 +315,7 @@ public class RenderscriptAlgorithm extends Algorithm {
                 1.0f, 1.0f, 1.0f
         };
 
-        toGrayRS();
+        toGray();
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);

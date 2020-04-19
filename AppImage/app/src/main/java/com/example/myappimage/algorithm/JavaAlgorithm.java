@@ -64,7 +64,7 @@ public class JavaAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
-    public int[] toGraySecondVersion() {
+    public int[] toGray() {
         Bitmap bitmap = getBitmap();
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
@@ -325,62 +325,51 @@ public class JavaAlgorithm extends Algorithm {
     }
 
     /**
-     * Apply an average filter on the image.
+     * Apply an average or a gaussian filter on the image.
      * It will blur the image.
      *
-     * @param size the size of the kernel
+     * @param filterType the type of filter : average (0) or gaussian (1)
+     * @param size       the size of the kernel
      * @return the new pixels
      */
-    public int[] averageFilterConvolution(int size) {
+    public int[] blurConvolution(int filterType, int size) {
         Bitmap bitmap = getBitmap();
         ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(size);
-        double moy = 1.0 / (size * size);
-        convolutionMatrix.setMatrix(moy);
-        int[] pixels = convolutionMatrix.applyConvolution(bitmap);
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        return getPixels();
-    }
-
-    /**
-     * Apply a Gaussian filter on the image.
-     * It will blur the image.
-     *
-     * @param size the size of the kernel
-     * @return the new pixels
-     */
-    public int[] gaussianFilterConvolution(int size) {
-        Bitmap bitmap = getBitmap();
-        double[][] gauss;
-        if (size == 3) {
-            gauss = new double[][]{
-                    {1.0, 2.0, 1.0},
-                    {2.0, 4.0, 2.0},
-                    {1.0, 2.0, 1.0}
-            };
+        if (filterType == 0) {
+            double moy = 1.0 / (size * size);
+            convolutionMatrix.setMatrix(moy);
         } else {
-            gauss = new double[][]{
-                    {1.0, 2.0, 3.0, 2.0, 1.0},
-                    {2.0, 6.0, 8.0, 6.0, 2.0},
-                    {3.0, 8.0, 10.0, 8.0, 3.0},
-                    {2.0, 6.0, 8.0, 6.0, 2.0},
-                    {1.0, 2.0, 3.0, 2.0, 1.0}
-            };
-        }
-
-        double total = 0.0;
-        for (int i = 0; i < gauss.length; i++) {
-            for (int j = 0; j < gauss[i].length; j++) {
-                total += gauss[i][j];
+            double[][] gauss;
+            if (size == 3) {
+                gauss = new double[][]{
+                        {1.0, 2.0, 1.0},
+                        {2.0, 4.0, 2.0},
+                        {1.0, 2.0, 1.0}
+                };
+            } else {
+                gauss = new double[][]{
+                        {1.0, 2.0, 3.0, 2.0, 1.0},
+                        {2.0, 6.0, 8.0, 6.0, 2.0},
+                        {3.0, 8.0, 10.0, 8.0, 3.0},
+                        {2.0, 6.0, 8.0, 6.0, 2.0},
+                        {1.0, 2.0, 3.0, 2.0, 1.0}
+                };
             }
-        }
-        for (int i = 0; i < gauss.length; i++) {
-            for (int j = 0; j < gauss[i].length; j++) {
-                gauss[i][j] = gauss[i][j] / total;
-            }
-        }
 
-        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(size);
-        convolutionMatrix.setMatrix(gauss);
+            double total = 0.0;
+            for (int i = 0; i < gauss.length; i++) {
+                for (int j = 0; j < gauss[i].length; j++) {
+                    total += gauss[i][j];
+                }
+            }
+            for (int i = 0; i < gauss.length; i++) {
+                for (int j = 0; j < gauss[i].length; j++) {
+                    gauss[i][j] = gauss[i][j] / total;
+                }
+            }
+
+            convolutionMatrix.setMatrix(gauss);
+        }
         int[] pixels = convolutionMatrix.applyConvolution(bitmap);
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         return getPixels();
@@ -393,7 +382,7 @@ public class JavaAlgorithm extends Algorithm {
      * @return the new pixels
      */
     public int[] sobelFilterConvolution() {
-        toGraySecondVersion();
+        toGray();
         Bitmap bitmap = getBitmap();
 
         double[][] sobelHorizontal = new double[][]{
@@ -436,7 +425,7 @@ public class JavaAlgorithm extends Algorithm {
      * @return the new pixels
      */
     public int[] laplacienFilterConvolution() {
-        toGraySecondVersion();
+        toGray();
         Bitmap bitmap = getBitmap();
 
         double[][] laplacien = new double[][]{
@@ -469,7 +458,7 @@ public class JavaAlgorithm extends Algorithm {
      */
     public int[] cartoonEffect() {
         Bitmap bitmap = getBitmap();
-        averageFilterConvolution(5);
+        blurConvolution(0, 5);
         int[] pixels = getPixels();
         for (int i = 0; i < pixels.length; i++) {
             int pixel = pixels[i];

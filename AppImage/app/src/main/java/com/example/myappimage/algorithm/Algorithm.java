@@ -39,42 +39,6 @@ public abstract class Algorithm {
         return pixels;
     }
 
-    public int[] getRed() {
-        int[] red = new int[bitmap.getWidth() * bitmap.getHeight()];
-        int[] pixels = getPixels();
-        for (int i = 0; i < pixels.length; i++) {
-            red[i] = Color.red(pixels[i]);
-        }
-        return red;
-    }
-
-    public int[] getGreen() {
-        int[] green = new int[bitmap.getWidth() * bitmap.getHeight()];
-        int[] pixels = getPixels();
-        for (int i = 0; i < pixels.length; i++) {
-            green[i] = Color.green(pixels[i]);
-        }
-        return green;
-    }
-
-    public int[] getBlue() {
-        int[] blue = new int[bitmap.getWidth() * bitmap.getHeight()];
-        int[] pixels = getPixels();
-        for (int i = 0; i < pixels.length; i++) {
-            blue[i] = Color.blue(pixels[i]);
-        }
-        return blue;
-    }
-
-    public int[] getAlpha() {
-        int[] alpha = new int[bitmap.getWidth() * bitmap.getHeight()];
-        int[] pixels = getPixels();
-        for (int i = 0; i < pixels.length; i++) {
-            alpha[i] = Color.alpha(pixels[i]);
-        }
-        return alpha;
-    }
-
     /**
      * Calculate the correct interval for the keepColor algorithm.
      *
@@ -88,4 +52,26 @@ public abstract class Algorithm {
         else
             return new int[]{secondH, h};
     }
+
+    public abstract int[] toGray();
+
+    public abstract int[] colorize(int color);
+
+    public abstract int[] keepColor(int firstColor, int secondColor, boolean interval);
+
+    //    public abstract int[] changeBitmapBrightness(float value);
+
+    public abstract int[] dynamicExpansion();
+
+    public abstract int[] contrastDiminution(int diminution);
+
+    public abstract int[] histogramEqualization();
+
+    public abstract int[] blurConvolution(int filterType, int size);
+
+    public abstract int[] sobelFilterConvolution();
+
+    public abstract int[] laplacienFilterConvolution();
+
+    public abstract int[] snowEffect();
 }
