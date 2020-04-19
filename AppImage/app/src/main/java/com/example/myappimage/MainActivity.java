@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onDismiss(DialogInterface dialog) {
                         int value = averageDialogRS.getValue();
                         if (value > 0 && value % 2 == 1) {
-                            revertList.add(rs.averageFilterConvolution(value));
+                            revertList.add(rs.blurConvolution(0, value));
                             refreshAction();
                         } else
                             Toast.makeText(context, "Nombre invalide", Toast.LENGTH_LONG).show();
@@ -338,15 +338,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
                 ((AlertDialog.Builder) gaussDialog.getBuilder()).show();
                 return true;
+            case R.id.gaussConvolutionRS:
+                final CustomRadioDialog gaussDialogRS = new CustomRadioDialog("Choix de la taille du filtre de Gauss (RS)", null, this, listGauss);
+                ((AlertDialog.Builder) gaussDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = gaussDialogRS.getValue();
+                        if (value >= 0) {
+                            revertList.add(rs.blurConvolution(1, Integer.parseInt(listGauss[value])));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) gaussDialogRS.getBuilder()).show();
+                return true;
             case R.id.sobelConvolution:
                 revertList.add(java.sobelFilterConvolution());
                 refreshAction();
                 return true;
             case R.id.sobelConvolutionRS:
-//                sobelFilterConvolutionRS();
+                revertList.add(rs.sobelFilterConvolution());
+                refreshAction();
                 return true;
             case R.id.laplacienConvolution:
                 revertList.add(java.laplacienFilterConvolution());
+                refreshAction();
+                return true;
+            case R.id.laplacienConvolutionRS:
+                revertList.add(rs.laplacienFilterConvolution());
                 refreshAction();
                 return true;
             case R.id.cartoonEffect:

@@ -345,6 +345,7 @@ public class JavaAlgorithm extends Algorithm {
      * Apply a Gaussian filter on the image.
      * It will blur the image.
      *
+     * @param size the size of the kernel
      * @return the new pixels
      */
     public int[] gaussianFilterConvolution(int size) {

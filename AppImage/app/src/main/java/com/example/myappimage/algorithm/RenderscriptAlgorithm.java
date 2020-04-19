@@ -182,17 +182,37 @@ public class RenderscriptAlgorithm extends Algorithm {
     }
 
     /**
-     * Apply an average filter on the image.
+     * Apply an average or a gaussian filter on the image.
      * It will blur the image.
      *
-     * @param size the size of the kernel
+     * @param filterType the type of filter : average (0) or gaussian (1)
+     * @param size       the size of the kernel
      * @return the new pixels
      */
-    public int[] averageFilterConvolution(int size) {
+    public int[] blurConvolution(int filterType, int size) {
         float[] kernel = new float[size * size];
-        for (int i = 0; i < kernel.length; i++) {
-            kernel[i] = 1.f;
+        if (filterType == 0) {
+            for (int i = 0; i < kernel.length; i++) {
+                kernel[i] = 1.f;
+            }
+        } else {
+            if (size == 3) {
+                kernel = new float[]{
+                        1.f, 2.f, 1.f,
+                        2.f, 4.f, 2.f,
+                        1.f, 2.f, 1.f
+                };
+            } else {
+                kernel = new float[]{
+                        1.f, 2.f, 3.f, 2.f, 1.f,
+                        2.f, 6.f, 8.f, 6.f, 2.f,
+                        3.f, 8.f, 10.f, 8.f, 3.f,
+                        2.f, 6.f, 8.f, 6.f, 2.f,
+                        1.f, 2.f, 3.f, 2.f, 1.f
+                };
+            }
         }
+
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
@@ -203,25 +223,127 @@ public class RenderscriptAlgorithm extends Algorithm {
         Allocation pixelsAlloc = Allocation.createSized(rs, Element.I32(rs), getPixels().length);
         pixelsAlloc.copyFrom(getPixels());
 
-        ScriptC_averageFilter averageScript = new ScriptC_averageFilter(rs);
+        ScriptC_blur blurScript = new ScriptC_blur(rs);
 
-        averageScript.bind_kmatrix(kernelAlloc);
-        averageScript.bind_kpixels(pixelsAlloc);
+        blurScript.bind_matrix(kernelAlloc);
+        blurScript.bind_pixels(pixelsAlloc);
 
         float total = 0.f;
-        for(float f : kernel){
+        for (float f : kernel) {
             total += f;
         }
-        averageScript.set_kdiv(total);
-        averageScript.set_ksize(size);
-        averageScript.set_gIn(input);
 
-        averageScript.invoke_setup();
+        blurScript.set_div(total);
+        blurScript.set_size(size);
+        blurScript.set_gIn(input);
 
-        averageScript.forEach_root(input, output);
+        blurScript.invoke_setup();
+
+        blurScript.forEach_applyFilter(input, output);
 
         output.copyTo(bitmap);
 
+        input.destroy();
+        output.destroy();
+        blurScript.destroy();
+        return getPixels();
+    }
+
+    /**
+     * Apply a Sobel filter on the image.
+     * It will mark the image outlines.
+     *
+     * @return the new pixels
+     */
+    public int[] sobelFilterConvolution() {
+        float[] sobelHorizontal = new float[]{
+                -1.0f, 0.0f, 1.0f,
+                -2.0f, 0.0f, 2.0f,
+                -1.0f, 0.0f, 1.0f
+        };
+        float[] sobelVertical = new float[]{
+                -1.0f, -2.0f, -1.0f,
+                0.0f, 0.0f, 0.0f,
+                1.0f, 2.0f, 1.0f
+        };
+
+        toGrayRS();
+        Bitmap bitmap = getBitmap();
+
+        Allocation input = Allocation.createFromBitmap(rs, bitmap);
+        Allocation output = Allocation.createTyped(rs, input.getType());
+
+        Allocation sobelHAlloc = Allocation.createSized(rs, Element.F32(rs), sobelHorizontal.length);
+        sobelHAlloc.copyFrom(sobelHorizontal);
+        Allocation sobelVAlloc = Allocation.createSized(rs, Element.F32(rs), sobelVertical.length);
+        sobelVAlloc.copyFrom(sobelVertical);
+
+        Allocation pixelsAlloc = Allocation.createSized(rs, Element.I32(rs), getPixels().length);
+        pixelsAlloc.copyFrom(getPixels());
+
+        ScriptC_sobel sobelScript = new ScriptC_sobel(rs);
+
+        sobelScript.bind_sobelHorizontal(sobelHAlloc);
+        sobelScript.bind_sobelVertical(sobelVAlloc);
+        sobelScript.bind_pixels(pixelsAlloc);
+        sobelScript.set_size((int) Math.sqrt(sobelHorizontal.length));
+
+        sobelScript.set_gIn(input);
+
+        sobelScript.invoke_setup();
+
+        sobelScript.forEach_applySobel(input, output);
+
+        output.copyTo(bitmap);
+
+        input.destroy();
+        output.destroy();
+        sobelScript.destroy();
+        return getPixels();
+    }
+
+    /**
+     * Apply a Sobel filter on the image.
+     * It will mark the image outlines.
+     *
+     * @return the new pixels
+     */
+    public int[] laplacienFilterConvolution() {
+        float[] laplacien = new float[]{
+                1.0f, 1.0f, 1.0f,
+                1.0f, -8.0f, 1.0f,
+                1.0f, 1.0f, 1.0f
+        };
+
+        toGrayRS();
+        Bitmap bitmap = getBitmap();
+
+        Allocation input = Allocation.createFromBitmap(rs, bitmap);
+        Allocation output = Allocation.createTyped(rs, input.getType());
+
+        Allocation laplacienAlloc = Allocation.createSized(rs, Element.F32(rs), laplacien.length);
+        laplacienAlloc.copyFrom(laplacien);
+
+        Allocation pixelsAlloc = Allocation.createSized(rs, Element.I32(rs), getPixels().length);
+        pixelsAlloc.copyFrom(getPixels());
+
+        ScriptC_laplacien laplacienScript = new ScriptC_laplacien(rs);
+
+        laplacienScript.bind_laplacien(laplacienAlloc);
+        laplacienScript.bind_pixels(pixelsAlloc);
+        laplacienScript.set_size((int) Math.sqrt(laplacien.length));
+
+        laplacienScript.set_gIn(input);
+
+        laplacienScript.invoke_setup();
+
+        laplacienScript.forEach_applyLaplacien(input, output);
+
+        output.copyTo(bitmap);
+
+        input.destroy();
+        output.destroy();
+        laplacienScript.destroy();
         return getPixels();
     }
 

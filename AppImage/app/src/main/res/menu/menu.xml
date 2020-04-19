@@ -74,9 +74,14 @@
                 android:id="@+id/averageFilterRS"
                 android:title="@string/averageFilter"/>
             <item
+                android:id="@+id/gaussConvolutionRS"
+                android:title="@string/gaussConvolution" />
+            <item
                 android:id="@+id/sobelConvolutionRS"
-                android:title="@string/sobelConvolution"
-                android:enabled="false"/>
+                android:title="@string/sobelConvolution"/>
+            <item
+                android:id="@+id/laplacienConvolutionRS"
+                android:title="@string/laplacienConvolution" />
             <item
                 android:id="@+id/snowEffectRS"
                 android:title="@string/snowEffect" />
