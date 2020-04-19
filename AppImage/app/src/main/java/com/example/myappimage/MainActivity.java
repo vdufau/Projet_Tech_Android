@@ -310,7 +310,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ((AlertDialog.Builder) averageDialog.getBuilder()).show();
                 return true;
             case R.id.averageFilterRS:
-//                inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
+                final CustomInputDialog averageDialogRS = new CustomInputDialog("Choix de la taille du noyau de convolution (RS)", "Le nombre rentré doit être impair", this);
+                ((AlertDialog.Builder) averageDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = averageDialogRS.getValue();
+                        if (value > 0 && value % 2 == 1) {
+                            revertList.add(rs.averageFilterConvolution(value));
+                            refreshAction();
+                        } else
+                            Toast.makeText(context, "Nombre invalide", Toast.LENGTH_LONG).show();
+                    }
+                });
+                ((AlertDialog.Builder) averageDialogRS.getBuilder()).show();
                 return true;
             case R.id.gaussConvolution:
                 final CustomRadioDialog gaussDialog = new CustomRadioDialog("Choix de la taille du filtre de Gauss", null, this, listGauss);

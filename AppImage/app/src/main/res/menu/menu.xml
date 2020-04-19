@@ -72,8 +72,7 @@
                 android:title="@string/histogramEqualization" />
             <item
                 android:id="@+id/averageFilterRS"
-                android:title="@string/averageFilter"
-                android:enabled="false"/>
+                android:title="@string/averageFilter"/>
             <item
                 android:id="@+id/sobelConvolutionRS"
                 android:title="@string/sobelConvolution"

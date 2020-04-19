@@ -3,6 +3,7 @@ package com.example.myappimage.algorithm;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.renderscript.Allocation;
+import android.renderscript.Element;
 import android.renderscript.RenderScript;
 
 /**
@@ -177,6 +178,50 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         histEqScript.destroy();
+        return getPixels();
+    }
+
+    /**
+     * Apply an average filter on the image.
+     * It will blur the image.
+     *
+     * @param size the size of the kernel
+     * @return the new pixels
+     */
+    public int[] averageFilterConvolution(int size) {
+        float[] kernel = new float[size * size];
+        for (int i = 0; i < kernel.length; i++) {
+            kernel[i] = 1.f;
+        }
+        Bitmap bitmap = getBitmap();
+
+        Allocation input = Allocation.createFromBitmap(rs, bitmap);
+        Allocation output = Allocation.createTyped(rs, input.getType());
+
+        Allocation kernelAlloc = Allocation.createSized(rs, Element.F32(rs), kernel.length);
+        kernelAlloc.copyFrom(kernel);
+        Allocation pixelsAlloc = Allocation.createSized(rs, Element.I32(rs), getPixels().length);
+        pixelsAlloc.copyFrom(getPixels());
+
+        ScriptC_averageFilter averageScript = new ScriptC_averageFilter(rs);
+
+        averageScript.bind_kmatrix(kernelAlloc);
+        averageScript.bind_kpixels(pixelsAlloc);
+
+        float total = 0.f;
+        for(float f : kernel){
+            total += f;
+        }
+        averageScript.set_kdiv(total);
+        averageScript.set_ksize(size);
+        averageScript.set_gIn(input);
+
+        averageScript.invoke_setup();
+
+        averageScript.forEach_root(input, output);
+
+        output.copyTo(bitmap);
+
         return getPixels();
     }
 
