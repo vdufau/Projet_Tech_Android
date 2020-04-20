@@ -83,7 +83,7 @@ public abstract class Algorithm {
 
     public abstract int[] brightnessModification(int brightness);
 
-    public abstract int[] contrastDiminution(int diminution);
+    public abstract int[] contrastModification(double multiplier);
 
     public abstract int[] dynamicExpansion();
 

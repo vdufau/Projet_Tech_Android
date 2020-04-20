@@ -12,11 +12,14 @@ import com.example.myappimage.R;
 public class CustomSeekBarDialog extends CustomDialog {
     private int max;
     private int progress;
+    // 0 -> luminosity / 1 -> contrast
+    private int typeAlgorithm;
 
-    public CustomSeekBarDialog(String title, String description, Context context, int max, int progress) {
+    public CustomSeekBarDialog(String title, String description, Context context, int max, int progress, int typeAlgorithm) {
         super(title, description, context);
         this.max = max;
         this.progress = progress;
+        this.typeAlgorithm = typeAlgorithm;
         this.setBuilder(createDialog(this));
     }
 
@@ -50,7 +53,14 @@ public class CustomSeekBarDialog extends CustomDialog {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tv.setText("Valeur choisie : " + (progress - max / 2));
+                switch (typeAlgorithm) {
+                    case 0:
+                        tv.setText("Valeur choisie : " + (progress - max / 2));
+                        break;
+                    case 1:
+                        tv.setText("Valeur choisie : " + (progress / 100.0));
+                        break;
+                }
             }
 
             @Override

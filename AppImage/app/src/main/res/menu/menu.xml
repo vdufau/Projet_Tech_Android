@@ -21,8 +21,8 @@
                         android:id="@+id/brightness"
                         android:title="@string/brightness" />
                     <item
-                        android:id="@+id/contrastDiminution"
-                        android:title="@string/contrastDiminution" />
+                        android:id="@+id/contrast"
+                        android:title="@string/contrast" />
                     <item
                         android:id="@+id/dynamicExpansion"
                         android:title="@string/dynamicExpansion" />
@@ -87,8 +87,8 @@
                         android:id="@+id/brightnessRS"
                         android:title="@string/brightness" />
                     <item
-                        android:id="@+id/contrastDiminutionRS"
-                        android:title="@string/contrastDiminution" />
+                        android:id="@+id/contrastRS"
+                        android:title="@string/contrast" />
                     <item
                         android:id="@+id/dynamicExpansionRS"
                         android:title="@string/dynamicExpansion" />

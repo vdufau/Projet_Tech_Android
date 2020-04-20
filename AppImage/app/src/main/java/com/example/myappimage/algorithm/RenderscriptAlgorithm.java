@@ -131,32 +131,29 @@ public class RenderscriptAlgorithm extends Algorithm {
     }
 
     /**
-     * Close the interval of pixels values using renderscript.
+     * Modifies the bitmap's contrast.
      *
-     * @param dimChoice the diminution asked by the user
+     * @param multiplier the diminution asked by the user
      * @return the new pixels
      */
     @Override
-    public int[] contrastDiminution(int dimChoice) {
+    public int[] contrastModification(double multiplier) {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
 
-        ScriptC_contrastDiminution contrastDiminutionScript = new ScriptC_contrastDiminution(rs);
+        ScriptC_contrast contrastScript = new ScriptC_contrast(rs);
 
-        contrastDiminutionScript.set_dimChoice(dimChoice);
+        contrastScript.set_multiplier(multiplier);
 
-        contrastDiminutionScript.forEach_minMax(input);
-        contrastDiminutionScript.invoke_initNewMinMaxValues();
-        contrastDiminutionScript.invoke_createLUTExpanded();
-        contrastDiminutionScript.forEach_applyDiminution(input, output);
+        contrastScript.forEach_changeContrast(input, output);
 
         output.copyTo(bitmap);
 
         input.destroy();
         output.destroy();
-        contrastDiminutionScript.destroy();
+        contrastScript.destroy();
         return getPixels();
     }
 

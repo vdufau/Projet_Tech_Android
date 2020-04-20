@@ -162,6 +162,60 @@ public class JavaAlgorithm extends Algorithm {
     }
 
     /**
+     * Modifies the bitmap's brightness.
+     *
+     * @param brightness the value to add to each pixel
+     * @return the new pixels
+     */
+    @Override
+    public int[] brightnessModification(int brightness) {
+        Bitmap bitmap = getBitmap();
+        int[] pixels = getPixels();
+
+        for (int i = 0; i < pixels.length; i++) {
+            int pixel = pixels[i];
+            int red = Color.red(pixel) + brightness, green = Color.green(pixel) + brightness, blue = Color.blue(pixel) + brightness;
+            if (red > 255) red = 255;
+            if (green > 255) green = 255;
+            if (blue > 255) blue = 255;
+            if (red < 0) red = 0;
+            if (green < 0) green = 0;
+            if (blue < 0) blue = 0;
+            pixels[i] = Color.argb(Color.alpha(pixel), red, green, blue);
+        }
+        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
+    }
+
+    /**
+     * Modifies the bitmap's contrast.
+     *
+     * @param multiplier the diminution asked by the user
+     * @return the new pixels
+     */
+    @Override
+    public int[] contrastModification(double multiplier) {
+        Bitmap bitmap = getBitmap();
+        int[] pixels = getPixels();
+
+        for (int i = 0; i < pixels.length; i++) {
+            int pixel = pixels[i];
+            double red = multiplier * (Color.red(pixel) - 128) + 128;
+            double green = multiplier * (Color.green(pixel) - 128) + 128;
+            double blue = multiplier * (Color.blue(pixel) - 128) + 128;
+            if (red > 255) red = 255;
+            if (green > 255) green = 255;
+            if (blue > 255) blue = 255;
+            if (red < 0) red = 0;
+            if (green < 0) green = 0;
+            if (blue < 0) blue = 0;
+            pixels[i] = Color.argb(Color.alpha(pixel), (int) red, (int) green, (int) blue);
+        }
+        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return getPixels();
+    }
+
+    /**
      * Extend the pixels values if possible.
      *
      * @return the new pixels
@@ -189,96 +243,6 @@ public class JavaAlgorithm extends Algorithm {
         if (maxValue != 100 && minValue != 0 && maxValue - minValue != 0) {
             for (int i = 0; i < size; i++) {
                 LUTValue[i] = 100 * (i - minValue) / (maxValue - minValue);
-            }
-
-            for (int i = 0; i < pixels.length; i++) {
-                float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-                hsv[2] = LUTValue[(int) hsv[2]];
-                float[] rgb = myHsvToRgb(hsv[0], hsv[1] / 100, hsv[2] / 100);
-                pixels[i] = Color.argb(Color.alpha(pixels[i]), (int) rgb[0], (int) rgb[1], (int) rgb[2]);
-            }
-
-            bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        }
-        return getPixels();
-    }
-
-    /**
-     * Modifies the bitmap's brightness.
-     *
-     * @param brightness the value to add to each pixel
-     * @return the new pixels
-     */
-    @Override
-    public int[] brightnessModification(int brightness) {
-        Bitmap bitmap = getBitmap();
-        int[] pixels = getPixels();
-
-        for (int i = 0; i < pixels.length; i++) {
-            int pixel = pixels[i];
-            int red = Color.red(pixel) + brightness, green = Color.green(pixel) + brightness, blue = Color.blue(pixel) + brightness;
-            if (red > 255) red = 255;
-            if (green > 255) green = 255;
-            if (blue > 255) blue = 255;
-            if (red < 0) red = 0;
-            if (green < 0) green = 0;
-            if (blue < 0) blue = 0;
-            pixels[i] = Color.argb(Color.alpha(pixel), red, green, blue);
-        }
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        return getPixels();
-    }
-
-    /**
-     * Close the interval of pixels values.
-     *
-     * @param dimChoice the diminution asked by the user
-     * @return the new pixels
-     */
-    @Override
-    public int[] contrastDiminution(int dimChoice) {
-        Bitmap bitmap = getBitmap();
-        int size = 101;
-        int[] LUTValue = new int[size];
-        int[] pixels = getPixels();
-        int maxValue = 0, minValue = 100;
-
-        for (int i = 0; i < size; i++) {
-            LUTValue[i] = 0;
-        }
-
-        for (int i = 0; i < pixels.length; i++) {
-            float[] hsv = myRgbToHsv(Color.red(pixels[i]), Color.green(pixels[i]), Color.blue(pixels[i]));
-            if ((int) hsv[2] > maxValue)
-                maxValue = (int) hsv[2];
-            if ((int) hsv[2] < minValue)
-                minValue = (int) hsv[2];
-        }
-
-        int maxValue2 = -1;
-        switch (dimChoice) {
-            case 0:
-                maxValue2 = maxValue - 1;
-                break;
-            case 1:
-                maxValue2 = maxValue - (maxValue + minValue) / 4;
-                break;
-            case 2:
-                maxValue2 = maxValue - (maxValue + minValue) / 2;
-                break;
-            case 3:
-                maxValue2 = maxValue - (3 * (maxValue + minValue) / 4);
-                break;
-            case 4:
-                maxValue2 = minValue + 1;
-                break;
-            default:
-                break;
-        }
-
-        if (maxValue2 >= 0 && minValue >= 0 && maxValue2 > minValue && maxValue2 - minValue != 0) {
-            for (int i = 0; i < size; i++) {
-                LUTValue[i] = (i - minValue) * (maxValue2 - minValue) / (maxValue - minValue) + minValue;
             }
 
             for (int i = 0; i < pixels.length; i++) {

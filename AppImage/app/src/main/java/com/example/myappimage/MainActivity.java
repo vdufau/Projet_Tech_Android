@@ -157,7 +157,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final String[] listInterval = getResources().getStringArray(R.array.keepColorInterval);
-        final String[] listContrast = getResources().getStringArray(R.array.contrastDim);
         final String[] listGauss = getResources().getStringArray(R.array.gaussChoices);
         final int rangeValuesBrightness = 510;
         switch (item.getItemId()) {
@@ -256,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ((ColorPickerDialog.Builder) keepColorRSDialog.getBuilder()).show();
                 return true;
             case R.id.brightness:
-                final CustomSeekBarDialog brightnessDialog = new CustomSeekBarDialog("Modification de la luminosité", null, this, rangeValuesBrightness, rangeValuesBrightness / 2);
+                final CustomSeekBarDialog brightnessDialog = new CustomSeekBarDialog("Modification de la luminosité", null, this, rangeValuesBrightness, rangeValuesBrightness / 2, 0);
                 ((AlertDialog.Builder) brightnessDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
@@ -270,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ((AlertDialog.Builder) brightnessDialog.getBuilder()).show();
                 return true;
             case R.id.brightnessRS:
-                final CustomSeekBarDialog brightnessDialogRS = new CustomSeekBarDialog("Modification de la luminosité (RS)", null, this, rangeValuesBrightness, rangeValuesBrightness / 2);
+                final CustomSeekBarDialog brightnessDialogRS = new CustomSeekBarDialog("Modification de la luminosité (RS)", null, this, rangeValuesBrightness, rangeValuesBrightness / 2, 0);
                 ((AlertDialog.Builder) brightnessDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
@@ -283,6 +282,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
                 ((AlertDialog.Builder) brightnessDialogRS.getBuilder()).show();
                 return true;
+            case R.id.contrast:
+                final CustomSeekBarDialog contrastDialog = new CustomSeekBarDialog("Modification du contraste", null, this, 500, 0, 1);
+                ((AlertDialog.Builder) contrastDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        double value = contrastDialog.getValue();
+                        if (value >= 0) {
+                            revertList.add(java.contrastModification(value / 100.0));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) contrastDialog.getBuilder()).show();
+                return true;
+            case R.id.contrastRS:
+                final CustomSeekBarDialog contrastDialogRS = new CustomSeekBarDialog("Modification du contraste (RS)", null, this, 500, 0, 1);
+                ((AlertDialog.Builder) contrastDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        double value = contrastDialogRS.getValue();
+                        if (value >= 0) {
+                            revertList.add(rs.contrastModification(value / 100.0));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) contrastDialogRS.getBuilder()).show();
+                return true;
             case R.id.dynamicExpansion:
                 revertList.add(java.dynamicExpansion());
                 refreshAction();
@@ -290,34 +317,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.dynamicExpansionRS:
                 revertList.add(rs.dynamicExpansion());
                 refreshAction();
-                return true;
-            case R.id.contrastDiminution:
-                final CustomRadioDialog contrastDialog = new CustomRadioDialog("Choix de la diminution", null, this, listContrast);
-                ((AlertDialog.Builder) contrastDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        int choice = contrastDialog.getValue();
-                        if (choice >= 0) {
-                            revertList.add(java.contrastDiminution(choice));
-                            refreshAction();
-                        }
-                    }
-                });
-                ((AlertDialog.Builder) contrastDialog.getBuilder()).show();
-                return true;
-            case R.id.contrastDiminutionRS:
-                final CustomRadioDialog constrastRSDialog = new CustomRadioDialog("Choix de la diminution (RS)", null, this, listContrast);
-                ((AlertDialog.Builder) constrastRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        int choice = constrastRSDialog.getValue();
-                        if (choice >= 0) {
-                            revertList.add(rs.contrastDiminution(choice));
-                            refreshAction();
-                        }
-                    }
-                });
-                ((AlertDialog.Builder) constrastRSDialog.getBuilder()).show();
                 return true;
             case R.id.histogramEqualization:
                 revertList.add(java.histogramEqualization());
