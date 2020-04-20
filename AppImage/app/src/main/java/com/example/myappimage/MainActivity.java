@@ -1,17 +1,20 @@
 package com.example.myappimage;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -25,6 +28,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
@@ -77,6 +81,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private PointF mid = new PointF();
     private float oldDist = 1f;
 
+    private static final int PERMISSION_CODE = 300;
+
     /**
      * Initialization of the application.
      * Initialization of the main layout.
@@ -127,6 +133,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                saveImage();
+            } else {
+                Toast.makeText(this, "Permissions pour la caméra et la sauvegarde refusées", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     /**
@@ -408,9 +425,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivityForResult(intent, 1);
                 break;
             case R.id.saveImage:
-//                loadingDialog.startDialog();
-                saveImage();
-//                loadingDialog.stopDialog();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED
+                            || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                        String[] permissions = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                        requestPermissions(permissions, PERMISSION_CODE);
+                    } else {
+                        saveImage();
+                    }
+                } else {
+                    saveImage();
+                }
                 break;
             case R.id.revert:
                 if (revertList.size() > 1) {
@@ -549,55 +574,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         float scale = scaleW > scaleH ? scaleH : scaleW;
         matrix.setScale(scale, scale);
         savedMatrix.setScale(scale, scale);
-
-        Log.i("aya", "" + scaleW + " " + scaleH + " " + scale + " " + getBitmapPositionInsideImageView(im));
-    }
-
-    /**
-     * Returns the bitmap position inside an imageView.
-     * @param imageView source ImageView
-     * @return 0: left, 1: top, 2: width, 3: height
-     */
-    public static int[] getBitmapPositionInsideImageView(ImageView imageView) {
-        int[] ret = new int[4];
-
-        if (imageView == null || imageView.getDrawable() == null)
-            return ret;
-
-        // Get image dimensions
-        // Get image matrix values and place them in an array
-        float[] f = new float[9];
-        imageView.getImageMatrix().getValues(f);
-
-        // Extract the scale values using the constants (if aspect ratio maintained, scaleX == scaleY)
-        final float scaleX = f[Matrix.MSCALE_X];
-        final float scaleY = f[Matrix.MSCALE_Y];
-
-        // Get the drawable (could also get the bitmap behind the drawable and getWidth/getHeight)
-        final Drawable d = imageView.getDrawable();
-        final int origW = d.getIntrinsicWidth();
-        final int origH = d.getIntrinsicHeight();
-
-        // Calculate the actual dimensions
-        final int actW = Math.round(origW * scaleX);
-        final int actH = Math.round(origH * scaleY);
-
-        ret[2] = actW;
-        ret[3] = actH;
-
-        // Get image position
-        // We assume that the image is centered into ImageView
-        int imgViewW = imageView.getWidth();
-        int imgViewH = imageView.getHeight();
-
-        int top = (int) (imgViewH - actH)/2;
-        int left = (int) (imgViewW - actW)/2;
-        Log.i("aya", "" + top + " " + left + " " + actW + " " + actH);
-
-        ret[0] = left;
-        ret[1] = top;
-
-        return ret;
     }
 
     /**
