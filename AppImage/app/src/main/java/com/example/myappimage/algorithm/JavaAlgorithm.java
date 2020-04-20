@@ -159,30 +159,6 @@ public class JavaAlgorithm extends Algorithm {
     }
 
     /**
-     * Modifies the bitmap's brightness.
-     *
-     * @param value the brightness value chosen by the user (0-200)
-     * @return the new pixels
-     */
-    public int[] changeBitmapBrightness(float value) {
-        Bitmap bitmap = getBitmap();
-        ColorMatrix cm = new ColorMatrix(new float[]
-                {
-                        value, 0, 0, 0, 1,
-                        0, value, 0, 0, 1,
-                        0, 0, value, 0, 1,
-                        0, 0, 0, 1, 0
-                });
-
-        Canvas canvas = new Canvas(bitmap);
-
-        Paint paint = new Paint();
-        paint.setColorFilter(new ColorMatrixColorFilter(cm));
-        canvas.drawBitmap(bitmap, 0, 0, paint);
-        return getPixels();
-    }
-
-    /**
      * Extend the pixels values if possible.
      *
      * @return the new pixels
@@ -220,6 +196,31 @@ public class JavaAlgorithm extends Algorithm {
 
             bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         }
+        return getPixels();
+    }
+
+    /**
+     * Modifies the bitmap's brightness.
+     *
+     * @param brightness the value to add to each pixel
+     * @return the new pixels
+     */
+    public int[] brightnessModification(int brightness) {
+        Bitmap bitmap = getBitmap();
+        int[] pixels = getPixels();
+
+        for (int i = 0; i < pixels.length; i++) {
+            int pixel = pixels[i];
+            int red = Color.red(pixel) + brightness, green = Color.green(pixel) + brightness, blue = Color.blue(pixel) + brightness;
+            if (red > 255) red = 255;
+            if (green > 255) green = 255;
+            if (blue > 255) blue = 255;
+            if (red < 0) red = 0;
+            if (green < 0) green = 0;
+            if (blue < 0) blue = 0;
+            pixels[i] = Color.argb(Color.alpha(pixel), red, green, blue);
+        }
+        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         return getPixels();
     }
 

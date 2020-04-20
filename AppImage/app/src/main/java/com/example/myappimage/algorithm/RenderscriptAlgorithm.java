@@ -125,6 +125,11 @@ public class RenderscriptAlgorithm extends Algorithm {
         return getPixels();
     }
 
+    @Override
+    public int[] brightnessModification(int brightness) {
+        return new int[0];
+    }
+
     /**
      * Close the interval of pixels values using renderscript.
      *

@@ -32,6 +32,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.example.myappimage.algorithm.JavaAlgorithm;
@@ -253,14 +255,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ((ColorPickerDialog.Builder) keepColorRSDialog.getBuilder()).show();
                 return true;
             case R.id.brightness:
-                final CustomInputDialog brightnessDialog = new CustomInputDialog("Choix du niveau de luminosité de l'image (0-200)", null, this);
+                final int rangeValues = 510;
+                final CustomSeekBarDialog brightnessDialog = new CustomSeekBarDialog("Choix du niveau de luminosité de l'image", null, this, rangeValues, rangeValues / 2);
                 ((AlertDialog.Builder) brightnessDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int value = brightnessDialog.getValue();
-                        if (value <= 200 && value >= 0) {
-                            bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-                            revertList.add(java.changeBitmapBrightness((float) value / 100f));
+                        if (value >= 0) {
+                            revertList.add(java.brightnessModification(value - (rangeValues / 2)));
                             refreshAction();
                         }
                     }
