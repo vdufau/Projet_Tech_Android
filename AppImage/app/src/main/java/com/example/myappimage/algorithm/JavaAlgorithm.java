@@ -10,8 +10,8 @@ import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 
+import android.util.Log;
 import android.util.SparseArray;
-import android.widget.ImageView;
 
 import com.example.myappimage.ConvolutionMatrix;
 import com.example.myappimage.R;
@@ -32,9 +32,6 @@ import static com.example.myappimage.PixelTransformation.*;
  * Link : https://github.com/vdufau/Projet_Tech_Android
  */
 public class JavaAlgorithm extends Algorithm {
-    Bitmap nose;
-    Bitmap right_eye;
-    Bitmap left_eye;
 
     public JavaAlgorithm(Bitmap bitmap, Context context) {
         super(bitmap, context);
@@ -501,14 +498,14 @@ public class JavaAlgorithm extends Algorithm {
     /**
      * Add objects to the bitmap.
      *
-     * @return the new pixels
+     * @return the new pixels or null if there is no object to insert into the bitmap
      */
     public int[] objectIncrustation() {
         Bitmap bitmap = getBitmap();
         Context context = getContext();
-        nose = BitmapFactory.decodeResource(context.getApplicationContext().getResources(), R.drawable.clown_nose);
-        right_eye = BitmapFactory.decodeResource(context.getApplicationContext().getResources(), R.drawable.right_eye);
-        left_eye = BitmapFactory.decodeResource(context.getApplicationContext().getResources(), R.drawable.left_eye);
+        Bitmap nose = BitmapFactory.decodeResource(context.getApplicationContext().getResources(), R.drawable.clown_nose);
+        Bitmap right_eye = BitmapFactory.decodeResource(context.getApplicationContext().getResources(), R.drawable.right_eye);
+        Bitmap left_eye = BitmapFactory.decodeResource(context.getApplicationContext().getResources(), R.drawable.left_eye);
 
         Bitmap tempBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas tempCanvas = new Canvas(tempBitmap);
@@ -523,37 +520,44 @@ public class JavaAlgorithm extends Algorithm {
         Frame frame = new Frame.Builder().setBitmap(bitmap).build();
         SparseArray<Face> faces = faceDetector.detect(frame);
 
-        for (int i = 0; i < faces.size(); i++) {
-            Face thisFace = faces.valueAt(i);
-            nose = Bitmap.createScaledBitmap(nose, (int) thisFace.getWidth() / 4, (int) thisFace.getWidth() / 4, false);
-            right_eye = Bitmap.createScaledBitmap(right_eye, (int) thisFace.getWidth() / 4, (int) thisFace.getWidth() / 4, false);
-            left_eye = Bitmap.createScaledBitmap(left_eye, (int) thisFace.getWidth() / 4, (int) thisFace.getWidth() / 4, false);
+        if (faces.size() > 0) {
+            for (int i = 0; i < faces.size(); i++) {
+                Face thisFace = faces.valueAt(i);
+                nose = Bitmap.createScaledBitmap(nose, (int) thisFace.getWidth() / 4, (int) thisFace.getWidth() / 4, false);
+                nose = createTransparentBitmapFromBitmap(nose, Color.WHITE);
+                right_eye = Bitmap.createScaledBitmap(right_eye, (int) thisFace.getWidth() / 4, (int) thisFace.getWidth() / 4, false);
+                right_eye = createTransparentBitmapFromBitmap(right_eye, Color.WHITE);
+                left_eye = Bitmap.createScaledBitmap(left_eye, (int) thisFace.getWidth() / 4, (int) thisFace.getWidth() / 4, false);
+                left_eye = createTransparentBitmapFromBitmap(left_eye, Color.WHITE);
 
-            for (Landmark landmark : thisFace.getLandmarks()) {
-                int cx = (int) (landmark.getPosition().x);
-                int cy = (int) (landmark.getPosition().y);
+                for (Landmark landmark : thisFace.getLandmarks()) {
+                    int cx = (int) (landmark.getPosition().x);
+                    int cy = (int) (landmark.getPosition().y);
 
-                if (landmark.getType() == Landmark.NOSE_BASE) {
-                    int scaleWidth = nose.getScaledWidth(tempCanvas);
-                    int scaleHeight = nose.getScaledHeight(tempCanvas);
-                    tempCanvas.drawBitmap(nose, cx - (scaleWidth / 2), cy - scaleHeight + scaleHeight / 4, null);
-                }
-                if (landmark.getType() == Landmark.RIGHT_EYE) {
-                    int scaleWidth = right_eye.getScaledWidth(tempCanvas);
-                    int scaleHeight = right_eye.getScaledHeight(tempCanvas);
-                    tempCanvas.drawBitmap(right_eye, cx - (scaleWidth / 2), cy - scaleHeight + scaleHeight / 4, null);
-                }
-                if (landmark.getType() == Landmark.LEFT_EYE) {
-                    int scaleWidth = left_eye.getScaledWidth(tempCanvas);
-                    int scaleHeight = left_eye.getScaledHeight(tempCanvas);
-                    tempCanvas.drawBitmap(left_eye, cx - (scaleWidth / 2), cy - scaleHeight + scaleHeight / 4, null);
+                    if (landmark.getType() == Landmark.NOSE_BASE) {
+                        int scaleWidth = nose.getScaledWidth(tempCanvas);
+                        int scaleHeight = nose.getScaledHeight(tempCanvas);
+                        tempCanvas.drawBitmap(nose, cx - (scaleWidth / 2), cy - scaleHeight + scaleHeight / 4, null);
+                    }
+                    if (landmark.getType() == Landmark.RIGHT_EYE) {
+                        int scaleWidth = right_eye.getScaledWidth(tempCanvas);
+                        int scaleHeight = right_eye.getScaledHeight(tempCanvas);
+                        tempCanvas.drawBitmap(right_eye, cx - (scaleWidth / 2), cy - scaleHeight + scaleHeight / 4, null);
+                    }
+                    if (landmark.getType() == Landmark.LEFT_EYE) {
+                        int scaleWidth = left_eye.getScaledWidth(tempCanvas);
+                        int scaleHeight = left_eye.getScaledHeight(tempCanvas);
+                        tempCanvas.drawBitmap(left_eye, cx - (scaleWidth / 2), cy - scaleHeight + scaleHeight / 4, null);
+                    }
                 }
             }
-        }
 
-        Bitmap b = new BitmapDrawable(context.getResources(), tempBitmap).getBitmap();
-        bitmap.setPixels(getPixels(b), 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        return getPixels();
+            Bitmap b = new BitmapDrawable(context.getResources(), tempBitmap).getBitmap();
+            bitmap.setPixels(getPixels(b), 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+            return getPixels();
+        } else {
+            return null;
+        }
     }
 
 }

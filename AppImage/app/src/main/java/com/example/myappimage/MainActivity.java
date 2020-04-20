@@ -398,8 +398,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 refreshAction();
                 return true;
             case R.id.imageIncrustation:
-                revertList.add(java.objectIncrustation());
-                refreshAction();
+                int[] objectIncrust = java.objectIncrustation();
+                if (objectIncrust != null) {
+                    revertList.add(objectIncrust);
+                    refreshAction();
+                } else {
+                    Toast.makeText(this, "Pas d'objets à insérer sur cette image", Toast.LENGTH_LONG).show();
+                }
                 return true;
             case R.id.reinitialization:
                 bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());

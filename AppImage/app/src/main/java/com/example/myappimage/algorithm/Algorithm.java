@@ -53,6 +53,28 @@ public abstract class Algorithm {
             return new int[]{secondH, h};
     }
 
+    /**
+     * Replace one pixel color with a transparent color.
+     *
+     * @param bitmap the bitmap to transform
+     * @param color  the color to delete
+     * @return the new bitmap
+     */
+    public Bitmap createTransparentBitmapFromBitmap(Bitmap bitmap, int color) {
+        if (bitmap != null) {
+            int[] pixels = getPixels(bitmap);
+            for (int i = 0; i < pixels.length; i++) {
+                if (pixels[i] == color)
+                    pixels[i] = Color.TRANSPARENT;
+            }
+
+            bitmap = Bitmap.createBitmap(pixels, bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+
+            return bitmap;
+        }
+        return null;
+    }
+
     public abstract int[] toGray();
 
     public abstract int[] colorize(int color);
