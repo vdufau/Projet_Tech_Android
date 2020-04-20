@@ -159,6 +159,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final String[] listInterval = getResources().getStringArray(R.array.keepColorInterval);
         final String[] listContrast = getResources().getStringArray(R.array.contrastDim);
         final String[] listGauss = getResources().getStringArray(R.array.gaussChoices);
+        final int rangeValuesBrightness = 510;
         switch (item.getItemId()) {
             case R.id.gray:
 //                toGrayFirstVersion();
@@ -255,19 +256,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ((ColorPickerDialog.Builder) keepColorRSDialog.getBuilder()).show();
                 return true;
             case R.id.brightness:
-                final int rangeValues = 510;
-                final CustomSeekBarDialog brightnessDialog = new CustomSeekBarDialog("Choix du niveau de luminosité de l'image", null, this, rangeValues, rangeValues / 2);
+                final CustomSeekBarDialog brightnessDialog = new CustomSeekBarDialog("Modification de la luminosité", null, this, rangeValuesBrightness, rangeValuesBrightness / 2);
                 ((AlertDialog.Builder) brightnessDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int value = brightnessDialog.getValue();
                         if (value >= 0) {
-                            revertList.add(java.brightnessModification(value - (rangeValues / 2)));
+                            revertList.add(java.brightnessModification(value - (rangeValuesBrightness / 2)));
                             refreshAction();
                         }
                     }
                 });
                 ((AlertDialog.Builder) brightnessDialog.getBuilder()).show();
+                return true;
+            case R.id.brightnessRS:
+                final CustomSeekBarDialog brightnessDialogRS = new CustomSeekBarDialog("Modification de la luminosité (RS)", null, this, rangeValuesBrightness, rangeValuesBrightness / 2);
+                ((AlertDialog.Builder) brightnessDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = brightnessDialogRS.getValue();
+                        if (value >= 0) {
+                            revertList.add(rs.brightnessModification(value - (rangeValuesBrightness / 2)));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) brightnessDialogRS.getBuilder()).show();
                 return true;
             case R.id.dynamicExpansion:
                 revertList.add(java.dynamicExpansion());

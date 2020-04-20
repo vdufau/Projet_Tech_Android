@@ -25,6 +25,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] toGray() {
         Bitmap bitmap = getBitmap();
 
@@ -49,6 +50,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      * @param color the color to apply to the image
      * @return the new pixels
      */
+    @Override
     public int[] colorize(int color) {
         Bitmap bitmap = getBitmap();
 
@@ -77,6 +79,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      * @param inter   the parameter which determine if the colors to keep are between the two hues or not
      * @return the new pixels
      */
+    @Override
     public int[] keepColor(int h, int secondH, boolean inter) {
         Bitmap bitmap = getBitmap();
         int[] interval = keepColorInteval(h, secondH);
@@ -101,33 +104,30 @@ public class RenderscriptAlgorithm extends Algorithm {
     }
 
     /**
-     * Extend the pixels values using renderscript.
+     * Modifies the bitmap's brightness.
      *
+     * @param brightness the value to add to each pixel
      * @return the new pixels
      */
-    public int[] dynamicExpansion() {
+    @Override
+    public int[] brightnessModification(int brightness) {
         Bitmap bitmap = getBitmap();
 
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
 
-        ScriptC_dynamicExpansion dynamicExpansionScript = new ScriptC_dynamicExpansion(rs);
+        ScriptC_brightness brightnessScript = new ScriptC_brightness(rs);
 
-        dynamicExpansionScript.forEach_minMax(input);
-        dynamicExpansionScript.invoke_createLUTExpanded();
-        dynamicExpansionScript.forEach_expansion(input, output);
+        brightnessScript.set_brightness(brightness);
+
+        brightnessScript.forEach_changeBrightness(input, output);
 
         output.copyTo(bitmap);
 
         input.destroy();
         output.destroy();
-        dynamicExpansionScript.destroy();
+        brightnessScript.destroy();
         return getPixels();
-    }
-
-    @Override
-    public int[] brightnessModification(int brightness) {
-        return new int[0];
     }
 
     /**
@@ -136,6 +136,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      * @param dimChoice the diminution asked by the user
      * @return the new pixels
      */
+    @Override
     public int[] contrastDiminution(int dimChoice) {
         Bitmap bitmap = getBitmap();
 
@@ -160,10 +161,37 @@ public class RenderscriptAlgorithm extends Algorithm {
     }
 
     /**
+     * Extend the pixels values using renderscript.
+     *
+     * @return the new pixels
+     */
+    @Override
+    public int[] dynamicExpansion() {
+        Bitmap bitmap = getBitmap();
+
+        Allocation input = Allocation.createFromBitmap(rs, bitmap);
+        Allocation output = Allocation.createTyped(rs, input.getType());
+
+        ScriptC_dynamicExpansion dynamicExpansionScript = new ScriptC_dynamicExpansion(rs);
+
+        dynamicExpansionScript.forEach_minMax(input);
+        dynamicExpansionScript.invoke_createLUTExpanded();
+        dynamicExpansionScript.forEach_expansion(input, output);
+
+        output.copyTo(bitmap);
+
+        input.destroy();
+        output.destroy();
+        dynamicExpansionScript.destroy();
+        return getPixels();
+    }
+
+    /**
      * Equalize the pixels values using renderscript.
      *
      * @return the new pixels
      */
+    @Override
     public int[] histogramEqualization() {
         Bitmap bitmap = getBitmap();
 
@@ -194,6 +222,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      * @param size       the size of the kernel
      * @return the new pixels
      */
+    @Override
     public int[] blurConvolution(int filterType, int size) {
         float[] kernel = new float[size * size];
         if (filterType == 0) {
@@ -260,6 +289,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] sobelFilterConvolution() {
         float[] sobelHorizontal = new float[]{
                 -1.0f, 0.0f, 1.0f,
@@ -313,6 +343,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] laplacienFilterConvolution() {
         float[] laplacien = new float[]{
                 1.0f, 1.0f, 1.0f,
@@ -357,6 +388,7 @@ public class RenderscriptAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] snowEffect() {
         Bitmap bitmap = getBitmap();
 

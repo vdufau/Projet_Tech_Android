@@ -81,11 +81,11 @@ public abstract class Algorithm {
 
     public abstract int[] keepColor(int firstColor, int secondColor, boolean interval);
 
-    public abstract int[] dynamicExpansion();
-
     public abstract int[] brightnessModification(int brightness);
 
     public abstract int[] contrastDiminution(int diminution);
+
+    public abstract int[] dynamicExpansion();
 
     public abstract int[] histogramEqualization();
 

@@ -21,11 +21,11 @@
                         android:id="@+id/brightness"
                         android:title="@string/brightness" />
                     <item
-                        android:id="@+id/dynamicExpansion"
-                        android:title="@string/dynamicExpansion" />
-                    <item
                         android:id="@+id/contrastDiminution"
                         android:title="@string/contrastDiminution" />
+                    <item
+                        android:id="@+id/dynamicExpansion"
+                        android:title="@string/dynamicExpansion" />
                     <item
                         android:id="@+id/histogramEqualization"
                         android:title="@string/histogramEqualization" />
@@ -84,11 +84,14 @@
                         android:id="@+id/keepColorRS"
                         android:title="@string/keepColor" />
                     <item
-                        android:id="@+id/dynamicExpansionRS"
-                        android:title="@string/dynamicExpansion" />
+                        android:id="@+id/brightnessRS"
+                        android:title="@string/brightness" />
                     <item
                         android:id="@+id/contrastDiminutionRS"
                         android:title="@string/contrastDiminution" />
+                    <item
+                        android:id="@+id/dynamicExpansionRS"
+                        android:title="@string/dynamicExpansion" />
                     <item
                         android:id="@+id/histogramEqualizationRS"
                         android:title="@string/histogramEqualization" />

@@ -61,6 +61,7 @@ public class JavaAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] toGray() {
         Bitmap bitmap = getBitmap();
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
@@ -90,6 +91,7 @@ public class JavaAlgorithm extends Algorithm {
      * @param color the hue chosen by the user
      * @return the new pixels
      */
+    @Override
     public int[] colorize(int color) {
         Bitmap bitmap = getBitmap();
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
@@ -124,6 +126,7 @@ public class JavaAlgorithm extends Algorithm {
      * @param inter   the parameter which determine if the colors to keep are between the two hues or not
      * @return the new pixels
      */
+    @Override
     public int[] keepColor(int h, int secondH, boolean inter) {
         Bitmap bitmap = getBitmap();
         int[] interval = keepColorInteval(h, secondH);
@@ -163,6 +166,7 @@ public class JavaAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] dynamicExpansion() {
         Bitmap bitmap = getBitmap();
         int size = 101;
@@ -205,6 +209,7 @@ public class JavaAlgorithm extends Algorithm {
      * @param brightness the value to add to each pixel
      * @return the new pixels
      */
+    @Override
     public int[] brightnessModification(int brightness) {
         Bitmap bitmap = getBitmap();
         int[] pixels = getPixels();
@@ -230,6 +235,7 @@ public class JavaAlgorithm extends Algorithm {
      * @param dimChoice the diminution asked by the user
      * @return the new pixels
      */
+    @Override
     public int[] contrastDiminution(int dimChoice) {
         Bitmap bitmap = getBitmap();
         int size = 101;
@@ -292,6 +298,7 @@ public class JavaAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] histogramEqualization() {
         Bitmap bitmap = getBitmap();
         int size = 101;
@@ -330,6 +337,7 @@ public class JavaAlgorithm extends Algorithm {
      * @param size       the size of the kernel
      * @return the new pixels
      */
+    @Override
     public int[] blurConvolution(int filterType, int size) {
         Bitmap bitmap = getBitmap();
         ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(size);
@@ -379,6 +387,7 @@ public class JavaAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] sobelFilterConvolution() {
         toGray();
         Bitmap bitmap = getBitmap();
@@ -422,6 +431,7 @@ public class JavaAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] laplacienFilterConvolution() {
         toGray();
         Bitmap bitmap = getBitmap();
@@ -483,6 +493,7 @@ public class JavaAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] snowEffect() {
         Bitmap bitmap = getBitmap();
         Random random = new Random();
