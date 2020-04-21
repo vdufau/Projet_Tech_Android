@@ -60,9 +60,6 @@
                         android:id="@+id/pencilEffect"
                         android:title="@string/pencilEffect" />
                     <item
-                        android:id="@+id/pencilColorEffect"
-                        android:title="@string/pencilColorEffect" />
-                    <item
                         android:id="@+id/cartoonEffect"
                         android:title="@string/cartoonEffect" />
                     <item
@@ -134,9 +131,6 @@
                     <item
                         android:id="@+id/pencilEffectRS"
                         android:title="@string/pencilEffect" />
-                    <item
-                        android:id="@+id/pencilColorEffectRS"
-                        android:title="@string/pencilColorEffect" />
                     <item
                         android:id="@+id/cartoonEffectRS"
                         android:title="@string/cartoonEffect" />

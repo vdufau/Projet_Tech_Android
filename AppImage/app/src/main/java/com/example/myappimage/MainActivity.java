@@ -164,7 +164,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.gray:
 //                toGrayFirstVersion();
                 revertList.add(java.toGray());
-//                toGrayThirdVersion();
                 refreshAction();
                 return true;
             case R.id.grayRS:
@@ -418,10 +417,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
                 ((AlertDialog.Builder) graySketchDialog.getBuilder()).show();
-                return true;
-            case R.id.pencilColorEffect:
-                revertList.add(java.sketchColorEffect());
-                refreshAction();
                 return true;
             case R.id.laplacienConvolutionRS:
                 revertList.add(rs.laplacienFilterConvolution());
