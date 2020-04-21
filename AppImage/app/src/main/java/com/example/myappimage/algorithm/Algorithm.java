@@ -1,6 +1,8 @@
 package com.example.myappimage.algorithm;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 
 /**
  * Algorithm Class
@@ -10,13 +12,19 @@ import android.graphics.Bitmap;
  */
 public abstract class Algorithm {
     private Bitmap bitmap;
+    private Context context;
 
-    public Algorithm(Bitmap bitmap) {
+    public Algorithm(Bitmap bitmap, Context context) {
         this.bitmap = bitmap;
+        this.context = context;
     }
 
     public Bitmap getBitmap() {
         return bitmap;
+    }
+
+    public Context getContext() {
+        return context;
     }
 
     public int[] getPixels() {
@@ -44,4 +52,50 @@ public abstract class Algorithm {
         else
             return new int[]{secondH, h};
     }
+
+    /**
+     * Replace one pixel color with a transparent color.
+     *
+     * @param bitmap the bitmap to transform
+     * @param color  the color to delete
+     * @return the new bitmap
+     */
+    public Bitmap createTransparentBitmapFromBitmap(Bitmap bitmap, int color) {
+        if (bitmap != null) {
+            int[] pixels = getPixels(bitmap);
+            for (int i = 0; i < pixels.length; i++) {
+                if (pixels[i] == color)
+                    pixels[i] = Color.TRANSPARENT;
+            }
+
+            bitmap = Bitmap.createBitmap(pixels, bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+
+            return bitmap;
+        }
+        return null;
+    }
+
+    public abstract int[] toGray();
+
+    public abstract int[] colorize(int color);
+
+    public abstract int[] keepColor(int firstColor, int secondColor, boolean interval);
+
+    public abstract int[] brightnessModification(int brightness);
+
+    public abstract int[] contrastModification(double multiplier);
+
+    public abstract int[] dynamicExpansion();
+
+    public abstract int[] histogramEqualization();
+
+    public abstract int[] blurConvolution(int filterType, int size);
+
+    public abstract int[] sobelFilterConvolution();
+
+    public abstract int[] laplacienFilterConvolution();
+
+    public abstract int[] cartoonEffect();
+
+    public abstract int[] snowEffect();
 }

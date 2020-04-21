@@ -82,10 +82,10 @@ public class LoadActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                 openCamera();
             } else {
-                Toast.makeText(this, "Permission caméra refusée", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Permissions pour la caméra et la sauvegarde refusées", Toast.LENGTH_LONG).show();
             }
         }
     }

@@ -1,17 +1,20 @@
 package com.example.myappimage;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -25,9 +28,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.example.myappimage.algorithm.JavaAlgorithm;
@@ -77,6 +83,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private PointF mid = new PointF();
     private float oldDist = 1f;
 
+    private static final int PERMISSION_CODE = 300;
+
     /**
      * Initialization of the application.
      * Initialization of the main layout.
@@ -100,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         initialization();
 
-        java = new JavaAlgorithm(bitmap);
+        java = new JavaAlgorithm(bitmap, context);
         rs = new RenderscriptAlgorithm(bitmap, context);
 
         buttonHisto = (Button) findViewById(R.id.buttonHisto);
@@ -129,6 +137,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return super.onCreateOptionsMenu(menu);
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                saveImage();
+            } else {
+                Toast.makeText(this, "Permissions pour la caméra et la sauvegarde refusées", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
     /**
      * Call the comportment associate to the user's click in the menu.
      *
@@ -138,25 +157,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final String[] listInterval = getResources().getStringArray(R.array.keepColorInterval);
-        final String[] listContrast = getResources().getStringArray(R.array.contrastDim);
         final String[] listGauss = getResources().getStringArray(R.array.gaussChoices);
         final String[] listSketch = getResources().getStringArray(R.array.graySketch);
+        final int rangeValuesBrightness = 510;
         switch (item.getItemId()) {
             case R.id.gray:
 //                toGrayFirstVersion();
-                revertList.add(java.toGraySecondVersion());
+                revertList.add(java.toGray());
 //                toGrayThirdVersion();
                 refreshAction();
                 return true;
             case R.id.grayRS:
-                revertList.add(rs.toGrayRS());
+                revertList.add(rs.toGray());
                 refreshAction();
                 return true;
-            case R.id.invert:
+            case R.id.invertColor:
                 revertList.add(java.invert());
                 refreshAction();
                 return true;
-            case R.id.invertRS:
+            case R.id.invertColorRS:
                 revertList.add(rs.invertRS());
                 refreshAction();
                 return true;
@@ -181,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onDismiss(DialogInterface dialog) {
                         int value = colorizeRSDialog.getValue();
                         if (value >= 0) {
-                            revertList.add(rs.colorizeRS(value));
+                            revertList.add(rs.colorize(value));
                             refreshAction();
                         }
                     }
@@ -231,8 +250,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 ((AlertDialog.Builder) intervalRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                                     @Override
                                     public void onDismiss(DialogInterface dialog) {
-                                        int inter = intervalRSDialog.getValue();
-                                        revertList.add(rs.keepColorRS(h, secondH, inter));
+                                        boolean inter = intervalRSDialog.getValue() == 1;
+                                        revertList.add(rs.keepColor(h, secondH, inter));
                                         refreshAction();
                                     }
                                 });
@@ -245,62 +264,75 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ((ColorPickerDialog.Builder) keepColorRSDialog.getBuilder()).show();
                 return true;
             case R.id.brightness:
-                final CustomInputDialog brightnessDialog = new CustomInputDialog("Choix du niveau de luminosité de l'image (0-200)", null, this);
+                final CustomSeekBarDialog brightnessDialog = new CustomSeekBarDialog("Modification de la luminosité", null, this, rangeValuesBrightness, rangeValuesBrightness / 2, 0);
                 ((AlertDialog.Builder) brightnessDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         int value = brightnessDialog.getValue();
-                        if (value <= 200 && value >= 0) {
-                            bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-                            revertList.add(java.changeBitmapBrightness((float) value / 100f));
+                        if (value >= 0) {
+                            revertList.add(java.brightnessModification(value - (rangeValuesBrightness / 2)));
                             refreshAction();
                         }
                     }
                 });
                 ((AlertDialog.Builder) brightnessDialog.getBuilder()).show();
                 return true;
-            case R.id.dynamicExpansion:
-                revertList.add(java.dynamicExpansion());
-                refreshAction();
+            case R.id.brightnessRS:
+                final CustomSeekBarDialog brightnessDialogRS = new CustomSeekBarDialog("Modification de la luminosité (RS)", null, this, rangeValuesBrightness, rangeValuesBrightness / 2, 0);
+                ((AlertDialog.Builder) brightnessDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = brightnessDialogRS.getValue();
+                        if (value >= 0) {
+                            revertList.add(rs.brightnessModification(value - (rangeValuesBrightness / 2)));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) brightnessDialogRS.getBuilder()).show();
                 return true;
-            case R.id.dynamicExpansionRS:
-                revertList.add(rs.dynamicExpansionRS());
-                refreshAction();
-                return true;
-            case R.id.contrastDiminution:
-                final CustomRadioDialog contrastDialog = new CustomRadioDialog("Choix de la diminution", null, this, listContrast);
+            case R.id.contrast:
+                final CustomSeekBarDialog contrastDialog = new CustomSeekBarDialog("Modification du contraste", null, this, 500, 0, 1);
                 ((AlertDialog.Builder) contrastDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        int choice = contrastDialog.getValue();
-                        if (choice >= 0) {
-                            revertList.add(java.contrastDiminution(choice));
+                        double value = contrastDialog.getValue();
+                        if (value >= 0) {
+                            revertList.add(java.contrastModification(value / 100.0));
                             refreshAction();
                         }
                     }
                 });
                 ((AlertDialog.Builder) contrastDialog.getBuilder()).show();
                 return true;
-            case R.id.contrastDiminutionRS:
-                final CustomRadioDialog constrastRSDialog = new CustomRadioDialog("Choix de la diminution (RS)", null, this, listContrast);
-                ((AlertDialog.Builder) constrastRSDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+            case R.id.contrastRS:
+                final CustomSeekBarDialog contrastDialogRS = new CustomSeekBarDialog("Modification du contraste (RS)", null, this, 500, 0, 1);
+                ((AlertDialog.Builder) contrastDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        int choice = constrastRSDialog.getValue();
-                        if (choice >= 0) {
-                            revertList.add(rs.contrastDiminutionRS(choice));
+                        double value = contrastDialogRS.getValue();
+                        if (value >= 0) {
+                            revertList.add(rs.contrastModification(value / 100.0));
                             refreshAction();
                         }
                     }
                 });
-                ((AlertDialog.Builder) constrastRSDialog.getBuilder()).show();
+                ((AlertDialog.Builder) contrastDialogRS.getBuilder()).show();
+                return true;
+            case R.id.dynamicExpansion:
+                revertList.add(java.dynamicExpansion());
+                refreshAction();
+                return true;
+            case R.id.dynamicExpansionRS:
+                revertList.add(rs.dynamicExpansion());
+                refreshAction();
                 return true;
             case R.id.histogramEqualization:
                 revertList.add(java.histogramEqualization());
                 refreshAction();
                 return true;
             case R.id.histogramEqualizationRS:
-                revertList.add(rs.histogramEqualizationRS());
+                revertList.add(rs.histogramEqualization());
                 refreshAction();
                 return true;
             case R.id.averageFilter:
@@ -310,7 +342,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onDismiss(DialogInterface dialog) {
                         int value = averageDialog.getValue();
                         if (value > 0 && value % 2 == 1) {
-                            revertList.add(java.averageFilterConvolution(value));
+                            revertList.add(java.blurConvolution(0, value));
                             refreshAction();
                         } else
                             Toast.makeText(context, "Nombre invalide", Toast.LENGTH_LONG).show();
@@ -319,7 +351,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ((AlertDialog.Builder) averageDialog.getBuilder()).show();
                 return true;
             case R.id.averageFilterRS:
-//                inputDialog(AlgorithmVersion.RENDERSCRIPT, AlgorithmType.AVERAGE_CONVOLUTION);
+                final CustomInputDialog averageDialogRS = new CustomInputDialog("Choix de la taille du noyau de convolution (RS)", "Le nombre rentré doit être impair", this);
+                ((AlertDialog.Builder) averageDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = averageDialogRS.getValue();
+                        if (value > 0 && value % 2 == 1) {
+                            revertList.add(rs.blurConvolution(0, value));
+                            refreshAction();
+                        } else
+                            Toast.makeText(context, "Nombre invalide", Toast.LENGTH_LONG).show();
+                    }
+                });
+                ((AlertDialog.Builder) averageDialogRS.getBuilder()).show();
                 return true;
             case R.id.gaussConvolution:
                 final CustomRadioDialog gaussDialog = new CustomRadioDialog("Choix de la taille du filtre de Gauss", null, this, listGauss);
@@ -328,19 +372,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onDismiss(DialogInterface dialog) {
                         int value = gaussDialog.getValue();
                         if (value >= 0) {
-                            revertList.add(java.gaussianFilterConvolution(Integer.parseInt(listGauss[value])));
+                            revertList.add(java.blurConvolution(1, Integer.parseInt(listGauss[value])));
                             refreshAction();
                         }
                     }
                 });
                 ((AlertDialog.Builder) gaussDialog.getBuilder()).show();
                 return true;
+            case R.id.gaussConvolutionRS:
+                final CustomRadioDialog gaussDialogRS = new CustomRadioDialog("Choix de la taille du filtre de Gauss (RS)", null, this, listGauss);
+                ((AlertDialog.Builder) gaussDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = gaussDialogRS.getValue();
+                        if (value >= 0) {
+                            revertList.add(rs.blurConvolution(1, Integer.parseInt(listGauss[value])));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) gaussDialogRS.getBuilder()).show();
+                return true;
             case R.id.sobelConvolution:
                 revertList.add(java.sobelFilterConvolution());
                 refreshAction();
                 return true;
             case R.id.sobelConvolutionRS:
-//                sobelFilterConvolutionRS();
+                revertList.add(rs.sobelFilterConvolution());
+                refreshAction();
                 return true;
             case R.id.laplacienConvolution:
                 revertList.add(java.laplacienFilterConvolution());
@@ -364,13 +423,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 revertList.add(java.sketchColorEffect());
                 refreshAction();
                 return true;
+            case R.id.laplacienConvolutionRS:
+                revertList.add(rs.laplacienFilterConvolution());
+                refreshAction();
+                return true;
             case R.id.cartoonEffect:
                 revertList.add(java.cartoonEffect());
+                refreshAction();
+                return true;
+            case R.id.cartoonEffectRS:
+                revertList.add(rs.cartoonEffect());
                 refreshAction();
                 return true;
             case R.id.snowEffect:
                 revertList.add(java.snowEffect());
                 refreshAction();
+                return true;
+            case R.id.snowEffectRS:
+                revertList.add(rs.snowEffect());
+                refreshAction();
+                return true;
+            case R.id.imageIncrustation:
+                int[] objectIncrust = java.objectIncrustation();
+                if (objectIncrust != null) {
+                    revertList.add(objectIncrust);
+                    refreshAction();
+                } else {
+                    Toast.makeText(this, "Pas d'objets à insérer sur cette image", Toast.LENGTH_LONG).show();
+                }
                 return true;
             case R.id.reinitialization:
                 bitmap.setPixels(initialPixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
@@ -396,7 +476,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivityForResult(intent, 1);
                 break;
             case R.id.saveImage:
-                saveImage();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED
+                            || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                        String[] permissions = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                        requestPermissions(permissions, PERMISSION_CODE);
+                    } else {
+                        saveImage();
+                    }
+                } else {
+                    saveImage();
+                }
                 break;
             case R.id.revert:
                 if (revertList.size() > 1) {
@@ -535,55 +625,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         float scale = scaleW > scaleH ? scaleH : scaleW;
         matrix.setScale(scale, scale);
         savedMatrix.setScale(scale, scale);
-
-        Log.i("aya", "" + scaleW + " " + scaleH + " " + scale + " " + getBitmapPositionInsideImageView(im));
-    }
-
-    /**
-     * Returns the bitmap position inside an imageView.
-     * @param imageView source ImageView
-     * @return 0: left, 1: top, 2: width, 3: height
-     */
-    public static int[] getBitmapPositionInsideImageView(ImageView imageView) {
-        int[] ret = new int[4];
-
-        if (imageView == null || imageView.getDrawable() == null)
-            return ret;
-
-        // Get image dimensions
-        // Get image matrix values and place them in an array
-        float[] f = new float[9];
-        imageView.getImageMatrix().getValues(f);
-
-        // Extract the scale values using the constants (if aspect ratio maintained, scaleX == scaleY)
-        final float scaleX = f[Matrix.MSCALE_X];
-        final float scaleY = f[Matrix.MSCALE_Y];
-
-        // Get the drawable (could also get the bitmap behind the drawable and getWidth/getHeight)
-        final Drawable d = imageView.getDrawable();
-        final int origW = d.getIntrinsicWidth();
-        final int origH = d.getIntrinsicHeight();
-
-        // Calculate the actual dimensions
-        final int actW = Math.round(origW * scaleX);
-        final int actH = Math.round(origH * scaleY);
-
-        ret[2] = actW;
-        ret[3] = actH;
-
-        // Get image position
-        // We assume that the image is centered into ImageView
-        int imgViewW = imageView.getWidth();
-        int imgViewH = imageView.getHeight();
-
-        int top = (int) (imgViewH - actH)/2;
-        int left = (int) (imgViewW - actW)/2;
-        Log.i("aya", "" + top + " " + left + " " + actW + " " + actH);
-
-        ret[0] = left;
-        ret[1] = top;
-
-        return ret;
     }
 
     /**
@@ -622,6 +663,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(this, "Sauvegarde impossible", Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
+
     }
 
     /**
