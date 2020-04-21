@@ -17,8 +17,9 @@ uchar4 RS_KERNEL applyFilter(uchar4 in, uint32_t x, uint32_t y)
     if((x >= width - (size / 2)) || (y >= height - (size / 2))) return in;
 
     uint8_t i, j;
-    float red, green, blue;
-    red = green = blue = 0;
+    float red = 0.0f;
+    float green = 0.0f;
+    float blue = 0.0f;
 
     for(i = 0; i < size; i++)
     {
@@ -39,9 +40,9 @@ uchar4 RS_KERNEL applyFilter(uchar4 in, uint32_t x, uint32_t y)
     if (blue > 255) blue = 255;
 
     uchar4 out = in;
-    out.r = red;
-    out.g = green;
-    out.b = blue;
+    out.r = (int)blue;
+    out.g = (int)green;
+    out.b = (int)red;
 
     return out;
 }
