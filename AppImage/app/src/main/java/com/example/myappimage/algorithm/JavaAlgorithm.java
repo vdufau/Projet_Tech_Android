@@ -5,10 +5,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
 
 import com.example.myappimage.ConvolutionMatrix;
+
 import android.graphics.drawable.BitmapDrawable;
 
 import android.util.SparseArray;
@@ -62,14 +61,7 @@ public class JavaAlgorithm extends Algorithm {
      */
     @Override
     public int[] toGray() {
-        Bitmap bitmap = getBitmap();
-        int[] pixels = getPixels();
-        for (int i = 0; i < pixels.length; i++) {
-            int pixelGray = (int) pixelToGray(pixels[i]);
-            pixels[i] = Color.argb(Color.alpha(pixels[i]), pixelGray, pixelGray, pixelGray);
-        }
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        return getPixels();
+        return getPixels(grayBitmap(getBitmap()));
     }
 
     /**
@@ -79,6 +71,16 @@ public class JavaAlgorithm extends Algorithm {
      * @return the transformed bitmap
      */
     public Bitmap toGray(Bitmap bitmap) {
+        return grayBitmap(bitmap);
+    }
+
+    /**
+     * Apply a grayscale effect to the bitmap.
+     *
+     * @param bitmap the bitmap to transform
+     * @return the transformed bitmap
+     */
+    private Bitmap grayBitmap(Bitmap bitmap) {
         int[] pixels = getPixels(bitmap);
         for (int i = 0; i < pixels.length; i++) {
             int pixelGray = (int) pixelToGray(pixels[i]);
@@ -93,14 +95,9 @@ public class JavaAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
+    @Override
     public int[] invert() {
-        Bitmap bitmap = getBitmap();
-        int[] pixels = getPixels();
-        for (int i = 0; i < pixels.length; i++) {
-            pixels[i] = Color.argb(Color.alpha(pixels[i]), 255 - Color.red(pixels[i]), 255 - Color.green(pixels[i]), 255 - Color.blue(pixels[i]));
-        }
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        return getPixels();
+        return getPixels(invertBitmap(getBitmap()));
     }
 
     /**
@@ -109,7 +106,17 @@ public class JavaAlgorithm extends Algorithm {
      * @param bitmap the bitmap to transform
      * @return the transformed bitmap
      */
-    public Bitmap invert(Bitmap bitmap) {
+    private Bitmap invert(Bitmap bitmap) {
+        return invertBitmap(bitmap);
+    }
+
+    /**
+     * Apply an invert effect to the bitmap.
+     *
+     * @param bitmap the bitmap to transform
+     * @return the transformed bitmap
+     */
+    private Bitmap invertBitmap(Bitmap bitmap) {
         int[] pixels = getPixels(bitmap);
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = Color.argb(Color.alpha(pixels[i]), 255 - Color.red(pixels[i]), 255 - Color.green(pixels[i]), 255 - Color.blue(pixels[i]));
@@ -333,7 +340,30 @@ public class JavaAlgorithm extends Algorithm {
      */
     @Override
     public int[] blurConvolution(int filterType, int size) {
-        Bitmap bitmap = getBitmap();
+        return getPixels(blurBitmap(getBitmap(), filterType, size));
+    }
+
+    /**
+     * Overload of the blur algorithm to match with an entry bitmap.
+     *
+     * @param bitmap     the bitmap to transform
+     * @param filterType the type of filter : average (0) or gaussian (1)
+     * @param size       the size of the kernel
+     * @return the transformed bitmap
+     */
+    private Bitmap blurConvolution(Bitmap bitmap, int filterType, int size) {
+        return blurBitmap(bitmap, filterType, size);
+    }
+
+    /**
+     * Apply a blur effect to the bitmap.
+     *
+     * @param bitmap     the bitmap to transform
+     * @param filterType the type of filter : average (0) or gaussian (1)
+     * @param size       the size of the kernel
+     * @return the transformed bitmap
+     */
+    private Bitmap blurBitmap(Bitmap bitmap, int filterType, int size) {
         ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(size);
         if (filterType == 0) {
             double moy = 1.0 / (size * size);
@@ -370,40 +400,6 @@ public class JavaAlgorithm extends Algorithm {
 
             convolutionMatrix.setMatrix(gauss);
         }
-        int[] pixels = convolutionMatrix.applyConvolution(bitmap);
-        bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        return getPixels();
-    }
-
-    /**
-     * Overload of the gaussian blur to match with an entry bitmap.
-     *
-     * @param bitmap the bitmap to transform
-     * @return the transformed bitmap
-     */
-    public Bitmap gaussianFilterConvolution(Bitmap bitmap) {
-        double[][] gauss = new double[][]{
-                {1.0, 2.0, 3.0, 2.0, 1.0},
-                {2.0, 6.0, 8.0, 6.0, 2.0},
-                {3.0, 8.0, 10.0, 8.0, 3.0},
-                {2.0, 6.0, 8.0, 6.0, 2.0},
-                {1.0, 2.0, 3.0, 2.0, 1.0}
-        };
-
-        double total = 0.0;
-        for (int i = 0; i < gauss.length; i++) {
-            for (int j = 0; j < gauss[i].length; j++) {
-                total += gauss[i][j];
-            }
-        }
-        for (int i = 0; i < gauss.length; i++) {
-            for (int j = 0; j < gauss[i].length; j++) {
-                gauss[i][j] = gauss[i][j] / total;
-            }
-        }
-
-        ConvolutionMatrix convolutionMatrix = new ConvolutionMatrix(5);
-        convolutionMatrix.setMatrix(gauss);
         int[] pixels = convolutionMatrix.applyConvolution(bitmap);
         bitmap.setPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         return bitmap;
@@ -499,7 +495,7 @@ public class JavaAlgorithm extends Algorithm {
         copy = toGray(copy);
         Bitmap invert = copy.copy(Bitmap.Config.ARGB_8888, true);
         invert = invert(invert);
-        invert = gaussianFilterConvolution(invert);
+        invert = blurConvolution(invert, 1, 5);
         int[] pixelsCopy = getPixels(copy);
         int[] pixelsInvert = getPixels(invert);
         int[] results = new int[bitmap.getWidth() * bitmap.getHeight()];

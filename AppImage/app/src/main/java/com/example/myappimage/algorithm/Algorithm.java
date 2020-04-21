@@ -77,6 +77,8 @@ public abstract class Algorithm {
 
     public abstract int[] toGray();
 
+    public abstract int[] invert();
+
     public abstract int[] colorize(int color);
 
     public abstract int[] keepColor(int firstColor, int secondColor, boolean interval);
@@ -94,6 +96,8 @@ public abstract class Algorithm {
     public abstract int[] sobelFilterConvolution();
 
     public abstract int[] laplacienFilterConvolution();
+
+    public abstract int[] sketchEffect(int choice);
 
     public abstract int[] cartoonEffect();
 

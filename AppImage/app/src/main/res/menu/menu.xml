@@ -78,7 +78,7 @@
         <menu>
             <item
                 android:id="@+id/baseAlgoRS"
-                android:title="@string/baseAlgorithm">
+                android:title="@string/baseAlgorithmRS">
                 <menu>
                     <item
                         android:id="@+id/grayRS"
@@ -108,7 +108,7 @@
             </item>
             <item
                 android:id="@+id/convolAlgoRS"
-                android:title="@string/convolutionAlgorithm">
+                android:title="@string/convolutionAlgorithmRS">
                 <menu>
                     <item
                         android:id="@+id/averageFilterRS"
@@ -126,7 +126,7 @@
             </item>
             <item
                 android:id="@+id/advancedAlgoRS"
-                android:title="@string/advancedAlgorithm">
+                android:title="@string/advancedAlgorithmRS">
                 <menu>
                     <item
                         android:id="@+id/pencilEffectRS"

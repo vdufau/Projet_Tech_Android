@@ -3,8 +3,11 @@
     <string name="javaFunctions">Version Java</string>
     <string name="renderscriptFunctions">Version Renderscript</string>
     <string name="baseAlgorithm">Algorithmes de base</string>
+    <string name="baseAlgorithmRS">Algorithmes de base (RS)</string>
     <string name="convolutionAlgorithm">Algorithmes de convolution</string>
+    <string name="convolutionAlgorithmRS">Algorithmes de convolution (RS)</string>
     <string name="advancedAlgorithm">Algorithmes avancés</string>
+    <string name="advancedAlgorithmRS">Algorithmes avancés (RS)</string>
     <string name="gray">Niveaux de gris</string>
     <string name="invert">Inversion des couleurs</string>
     <string name="colorize">Colorisation</string>

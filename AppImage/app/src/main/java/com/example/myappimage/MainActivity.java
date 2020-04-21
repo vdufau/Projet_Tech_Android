@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 refreshAction();
                 return true;
             case R.id.invertColorRS:
-                revertList.add(rs.invertRS());
+                revertList.add(rs.invert());
                 refreshAction();
                 return true;
             case R.id.colorize:
@@ -404,6 +404,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 revertList.add(java.laplacienFilterConvolution());
                 refreshAction();
                 return true;
+            case R.id.laplacienConvolutionRS:
+                revertList.add(rs.laplacienFilterConvolution());
+                refreshAction();
+                return true;
             case R.id.pencilEffect:
                 final CustomRadioDialog graySketchDialog = new CustomRadioDialog("Niveau de détails", null, this, listSketch);
                 ((AlertDialog.Builder) graySketchDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -418,9 +422,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
                 ((AlertDialog.Builder) graySketchDialog.getBuilder()).show();
                 return true;
-            case R.id.laplacienConvolutionRS:
-                revertList.add(rs.laplacienFilterConvolution());
-                refreshAction();
+            case R.id.pencilEffectRS:
+                final CustomRadioDialog graySketchDialogRS = new CustomRadioDialog("Niveau de détails (RS)", null, this, listSketch);
+                ((AlertDialog.Builder) graySketchDialogRS.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        int value = graySketchDialogRS.getValue();
+                        if (value >= 0) {
+                            revertList.add(rs.sketchEffect(value));
+                            refreshAction();
+                        }
+                    }
+                });
+                ((AlertDialog.Builder) graySketchDialogRS.getBuilder()).show();
                 return true;
             case R.id.cartoonEffect:
                 revertList.add(java.cartoonEffect());

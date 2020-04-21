@@ -2,9 +2,12 @@ package com.example.myappimage.algorithm;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
+
+import static com.example.myappimage.PixelTransformation.pixelToGray;
 
 /**
  * RenderscriptAlgorithm Class
@@ -27,8 +30,26 @@ public class RenderscriptAlgorithm extends Algorithm {
      */
     @Override
     public int[] toGray() {
-        Bitmap bitmap = getBitmap();
+        return getPixels(grayBitmap(getBitmap()));
+    }
 
+    /**
+     * Overload of the grayscale algorithm to match with an entry bitmap.
+     *
+     * @param bitmap the bitmap to transform
+     * @return the transformed bitmap
+     */
+    private Bitmap toGray(Bitmap bitmap) {
+        return grayBitmap(bitmap);
+    }
+
+    /**
+     * Apply a grayscale effect to the bitmap.
+     *
+     * @param bitmap the bitmap to transform
+     * @return the transformed bitmap
+     */
+    private Bitmap grayBitmap(Bitmap bitmap) {
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
 
@@ -41,7 +62,7 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         grayScript.destroy();
-        return getPixels();
+        return bitmap;
     }
 
     /**
@@ -49,9 +70,28 @@ public class RenderscriptAlgorithm extends Algorithm {
      *
      * @return the new pixels
      */
-    public int[] invertRS() {
-        Bitmap bitmap = getBitmap();
+    @Override
+    public int[] invert() {
+        return getPixels(invertBitmap(getBitmap()));
+    }
 
+    /**
+     * Overload of the invert algorithm to match with an entry bitmap.
+     *
+     * @param bitmap the bitmap to transform
+     * @return the transformed bitmap
+     */
+    private Bitmap invert(Bitmap bitmap) {
+        return invertBitmap(bitmap);
+    }
+
+    /**
+     * Apply an invert effect to the bitmap.
+     *
+     * @param bitmap the bitmap to transform
+     * @return the transformed bitmap
+     */
+    private Bitmap invertBitmap(Bitmap bitmap) {
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
 
@@ -64,7 +104,7 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         invertScript.destroy();
-        return getPixels();
+        return bitmap;
     }
 
     /**
@@ -244,6 +284,30 @@ public class RenderscriptAlgorithm extends Algorithm {
      */
     @Override
     public int[] blurConvolution(int filterType, int size) {
+        return getPixels(blurBitmap(getBitmap(), filterType, size));
+    }
+
+    /**
+     * Overload of the blur algorithm to match with an entry bitmap.
+     *
+     * @param bitmap     the bitmap to transform
+     * @param filterType the type of filter : average (0) or gaussian (1)
+     * @param size       the size of the kernel
+     * @return the transformed bitmap
+     */
+    private Bitmap blurConvolution(Bitmap bitmap, int filterType, int size) {
+        return blurBitmap(bitmap, filterType, size);
+    }
+
+    /**
+     * Apply a blur effect to the bitmap.
+     *
+     * @param bitmap     the bitmap to transform
+     * @param filterType the type of filter : average (0) or gaussian (1)
+     * @param size       the size of the kernel
+     * @return the transformed bitmap
+     */
+    private Bitmap blurBitmap(Bitmap bitmap, int filterType, int size) {
         float[] kernel = new float[size * size];
         if (filterType == 0) {
             for (int i = 0; i < kernel.length; i++) {
@@ -267,15 +331,13 @@ public class RenderscriptAlgorithm extends Algorithm {
             }
         }
 
-        Bitmap bitmap = getBitmap();
-
         Allocation input = Allocation.createFromBitmap(rs, bitmap);
         Allocation output = Allocation.createTyped(rs, input.getType());
 
         Allocation kernelAlloc = Allocation.createSized(rs, Element.F32(rs), kernel.length);
         kernelAlloc.copyFrom(kernel);
-        Allocation pixelsAlloc = Allocation.createSized(rs, Element.I32(rs), getPixels().length);
-        pixelsAlloc.copyFrom(getPixels());
+        Allocation pixelsAlloc = Allocation.createSized(rs, Element.I32(rs), getPixels(bitmap).length);
+        pixelsAlloc.copyFrom(getPixels(bitmap));
 
         ScriptC_blur blurScript = new ScriptC_blur(rs);
 
@@ -300,7 +362,7 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         blurScript.destroy();
-        return getPixels();
+        return bitmap;
     }
 
     /**
@@ -400,6 +462,52 @@ public class RenderscriptAlgorithm extends Algorithm {
         input.destroy();
         output.destroy();
         laplacienScript.destroy();
+        return getPixels();
+    }
+
+    /**
+     * Apply a sketch effect on the image.
+     *
+     * @param choice the user choice of the algorithm
+     * @return the new pixels
+     */
+    @Override
+    public int[] sketchEffect(int choice) {
+        Bitmap bitmap = getBitmap();
+        Bitmap copyBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        copyBitmap = toGray(copyBitmap);
+        Bitmap invertBitmap = copyBitmap.copy(Bitmap.Config.ARGB_8888, true);
+        invertBitmap = invert(invertBitmap);
+        invertBitmap = blurConvolution(invertBitmap, 1, 5);
+
+        Allocation input = Allocation.createFromBitmap(rs, bitmap);
+        Allocation output = Allocation.createTyped(rs, input.getType());
+
+        int[] pixelsCopy = getPixels(copyBitmap);
+        int[] pixelsInvert = getPixels(invertBitmap);
+
+        Allocation copyAlloc = Allocation.createSized(rs, Element.I32(rs), pixelsCopy.length);
+        copyAlloc.copyFrom(pixelsCopy);
+        Allocation invertAlloc = Allocation.createSized(rs, Element.I32(rs), pixelsInvert.length);
+        invertAlloc.copyFrom(pixelsInvert);
+
+        ScriptC_sketch sketchScript = new ScriptC_sketch(rs);
+
+        sketchScript.bind_copy(copyAlloc);
+        sketchScript.bind_invert(invertAlloc);
+        sketchScript.set_choice(choice * 2);
+
+        sketchScript.set_gIn(input);
+
+        sketchScript.invoke_setup();
+
+        sketchScript.forEach_sketch(input, output);
+
+        output.copyTo(bitmap);
+
+        input.destroy();
+        output.destroy();
+        sketchScript.destroy();
         return getPixels();
     }
 
