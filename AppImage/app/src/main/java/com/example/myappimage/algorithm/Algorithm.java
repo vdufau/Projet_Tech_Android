@@ -95,5 +95,7 @@ public abstract class Algorithm {
 
     public abstract int[] laplacienFilterConvolution();
 
+    public abstract int[] cartoonEffect();
+
     public abstract int[] snowEffect();
 }

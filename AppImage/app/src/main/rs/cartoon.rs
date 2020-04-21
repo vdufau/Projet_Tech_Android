@@ -1,13 +1,11 @@
 #pragma version(1)
 #pragma rs java_package_name(com.example.myappimage.algorithm)
 
-double multiplier;
-
-uchar4 RS_KERNEL changeContrast(uchar4 in) {
+uchar4 RS_KERNEL cartoonize(uchar4 in) {
     uchar4 out = in;
-    double red = multiplier * (out.r - 128) + 128;
-    double green = multiplier * (out.g - 128) + 128;
-    double blue = multiplier * (out.b - 128) + 128;
+    int red = (out.r - (out.r % 64));
+    int green = (out.g - (out.g % 64));
+    int blue = (out.b - (out.b % 64));
 
     if (red > 255) red = 255;
     if (green > 255) green = 255;
@@ -16,9 +14,9 @@ uchar4 RS_KERNEL changeContrast(uchar4 in) {
     if (green < 0) green = 0;
     if (blue < 0) blue = 0;
 
-    out.r = (int)red;
-    out.g = (int)green;
-    out.b = (int)blue;
+    out.r = red;
+    out.g = green;
+    out.b = blue;
 
     return out;
 }

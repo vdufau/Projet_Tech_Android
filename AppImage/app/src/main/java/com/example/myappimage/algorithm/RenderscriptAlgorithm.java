@@ -381,6 +381,32 @@ public class RenderscriptAlgorithm extends Algorithm {
     }
 
     /**
+     * Apply a cartoon effect to the bitmap.
+     *
+     * @return the new pixels
+     */
+    @Override
+    public int[] cartoonEffect() {
+        blurConvolution(0, 5);
+
+        Bitmap bitmap = getBitmap();
+
+        Allocation input = Allocation.createFromBitmap(rs, bitmap);
+        Allocation output = Allocation.createTyped(rs, input.getType());
+
+        ScriptC_cartoon cartoonScript = new ScriptC_cartoon(rs);
+
+        cartoonScript.forEach_cartoonize(input, output);
+
+        output.copyTo(bitmap);
+
+        input.destroy();
+        output.destroy();
+        cartoonScript.destroy();
+        return getPixels();
+    }
+
+    /**
      * Apply a snow effect.
      *
      * @return the new pixels

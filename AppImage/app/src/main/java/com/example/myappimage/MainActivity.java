@@ -404,6 +404,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 revertList.add(java.cartoonEffect());
                 refreshAction();
                 return true;
+            case R.id.cartoonEffectRS:
+                revertList.add(rs.cartoonEffect());
+                refreshAction();
+                return true;
             case R.id.snowEffect:
                 revertList.add(java.snowEffect());
                 refreshAction();
