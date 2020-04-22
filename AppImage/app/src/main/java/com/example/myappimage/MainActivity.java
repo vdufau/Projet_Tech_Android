@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final int rangeValuesBrightness = 510;
         switch (item.getItemId()) {
             case R.id.gray:
-//                toGrayFirstVersion();
+//                java.toGrayFirstVersion();
                 revertList.add(java.toGray());
                 refreshAction();
                 return true;
