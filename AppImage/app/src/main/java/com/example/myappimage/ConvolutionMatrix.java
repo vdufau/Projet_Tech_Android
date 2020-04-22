@@ -2,7 +2,6 @@ package com.example.myappimage;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.util.Log;
 
 /**
  * ConvolutionMatrix Class

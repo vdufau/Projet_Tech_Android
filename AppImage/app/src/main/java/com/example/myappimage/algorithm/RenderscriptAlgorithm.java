@@ -2,12 +2,9 @@ package com.example.myappimage.algorithm;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
-
-import static com.example.myappimage.PixelTransformation.pixelToGray;
 
 /**
  * RenderscriptAlgorithm Class

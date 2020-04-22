@@ -9,6 +9,12 @@ import android.widget.TextView;
 
 import com.example.myappimage.R;
 
+/**
+ * CustomSeekBarDialog Class
+ *
+ * @author Dufau Vincent
+ * Link : https://github.com/vdufau/Projet_Tech_Android
+ */
 public class CustomSeekBarDialog extends CustomDialog {
     private int max;
     private int progress;

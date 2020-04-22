@@ -12,13 +12,11 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,8 +30,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.example.myappimage.algorithm.JavaAlgorithm;
@@ -212,24 +208,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onDismiss(DialogInterface dialog) {
                         final int h = keepColorDialog.getValue();
-                        final CustomColorDialog keepSecondColorDialog = new CustomColorDialog("Choix des couleurs", "Seconde couleur de l'intervalle", context);
-                        ((ColorPickerDialog.Builder) keepSecondColorDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
-                            @Override
-                            public void onDismiss(DialogInterface dialog) {
-                                final int secondH = keepSecondColorDialog.getValue();
-                                final CustomRadioDialog intervalDialog = new CustomRadioDialog("Couleurs à garder \nValeurs choisies : " + h + " et " + secondH, null, context, listInterval);
-                                ((AlertDialog.Builder) intervalDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
-                                    @Override
-                                    public void onDismiss(DialogInterface dialog) {
-                                        boolean inter = intervalDialog.getValue() == 1;
-                                        revertList.add(java.keepColor(h, secondH, inter));
-                                        refreshAction();
+                        if (h != -1) {
+                            final CustomColorDialog keepSecondColorDialog = new CustomColorDialog("Choix des couleurs", "Seconde couleur de l'intervalle", context);
+                            ((ColorPickerDialog.Builder) keepSecondColorDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                @Override
+                                public void onDismiss(DialogInterface dialog) {
+                                    final int secondH = keepSecondColorDialog.getValue();
+                                    if (secondH != -1) {
+                                        final CustomRadioDialog intervalDialog = new CustomRadioDialog("Couleurs à garder \nValeurs choisies : " + h + " et " + secondH, null, context, listInterval);
+                                        ((AlertDialog.Builder) intervalDialog.getBuilder()).setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                            @Override
+                                            public void onDismiss(DialogInterface dialog) {
+                                                if (intervalDialog.getValue() != -1) {
+                                                    boolean inter = intervalDialog.getValue() == 1;
+                                                    revertList.add(java.keepColor(h, secondH, inter));
+                                                    refreshAction();
+                                                }
+                                            }
+                                        });
+                                        ((AlertDialog.Builder) intervalDialog.getBuilder()).show();
                                     }
-                                });
-                                ((AlertDialog.Builder) intervalDialog.getBuilder()).show();
-                            }
-                        });
-                        ((ColorPickerDialog.Builder) keepSecondColorDialog.getBuilder()).show();
+                                }
+                            });
+                            ((ColorPickerDialog.Builder) keepSecondColorDialog.getBuilder()).show();
+                        }
                     }
                 });
                 ((ColorPickerDialog.Builder) keepColorDialog.getBuilder()).show();
